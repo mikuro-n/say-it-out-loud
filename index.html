@@ -625,8 +625,9 @@ async function speakGemini(text,done){
   const key=settings.voice+'|'+settings.slow+'|'+text;
   let audio=ttsCache.get(key);
   if(!audio){
-    const style=settings.slow?'Say this slowly and clearly, in a warm, friendly voice':'Say this in a warm, friendly, natural voice';
-    const j=await gemini(settings.ttsModel,{contents:[{parts:[{text:`${style}: ${text}`}]}],
+    // Style instructions get read aloud by the TTS model, so only the slow mode sends one.
+    const prompt=settings.slow?`Read the following transcript aloud slowly and clearly. Speak only the transcript.\n\nTRANSCRIPT:\n${text}`:text;
+    const j=await gemini(settings.ttsModel,{contents:[{parts:[{text:prompt}]}],
       generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:settings.voice}}}}});
     const part=(j.candidates?.[0]?.content?.parts||[]).find(p=>p.inlineData);
     if(!part)throw new Error('no audio returned');
