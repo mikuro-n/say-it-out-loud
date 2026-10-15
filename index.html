@@ -107,6 +107,8 @@ label{display:block;font-family:var(--block);font-size:11px;letter-spacing:.08em
 .chapter .num{font-family:var(--script);font-size:22px;color:var(--pink-soft)}
 .chapter .title{font-family:var(--serif);font-size:30px;line-height:1.1;color:var(--gold)}
 .chapter .note{font-family:var(--ja);font-size:13px;opacity:.85;margin-top:4px}
+.style-row{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:8px;font-size:12px;color:var(--pink-soft)}
+.style-row select{width:auto;font:12px var(--ja);padding:4px 26px 4px 10px;border-radius:999px;border:0;background-color:rgba(255,243,223,.9)}
 .empty{color:var(--cream);text-align:center;padding:30px 10px}
 .empty svg{width:70px;height:70px;margin-bottom:6px}
 
@@ -170,6 +172,40 @@ label{display:block;font-family:var(--block);font-size:11px;letter-spacing:.08em
 .toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:var(--navy);color:var(--cream);padding:10px 16px;border-radius:999px;
   font-family:var(--ja);font-size:13px;z-index:20;box-shadow:var(--shadow);display:none;max-width:90%}
 .toast.on{display:block}
+/* Ask drawer */
+.ask-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:8;border:0;cursor:pointer;
+  background:var(--gold);color:var(--navy);border-radius:14px 0 0 14px;padding:12px 8px 10px 10px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px}
+.ask-tab svg{width:20px;height:20px}
+.ask{position:fixed;top:0;right:0;bottom:0;z-index:10;width:min(400px,100vw);background:var(--paper);
+  box-shadow:-10px 0 34px rgba(18,8,40,.4);display:flex;flex-direction:column;
+  transform:translateX(105%);transition:transform .25s ease;padding-top:env(safe-area-inset-top)}
+body.ask-open .ask{transform:none}
+body.ask-open .ask-tab{display:none}
+.ask-head{display:flex;align-items:center;gap:8px;padding:14px 14px 10px 18px;border-bottom:1px dashed #e4d6bf}
+.ask-head>div{flex:1}
+.ask-title{font-family:var(--serif);font-size:22px;color:var(--navy)}
+.ask-sub{font-size:12px;color:var(--ink-soft)}
+.ask-close{border:0;background:var(--navy);color:var(--cream);width:34px;height:34px;border-radius:50%;font-size:20px;line-height:1;cursor:pointer}
+.ask-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.ask-empty{font-size:13px;color:var(--ink-soft);line-height:1.7}
+.ask-empty button{display:block;margin-top:6px;text-align:left}
+.q,.a{padding:10px 12px;border-radius:14px;font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.q{align-self:flex-end;max-width:88%;background:var(--pink);color:#fff;font-family:var(--ja);border-bottom-right-radius:4px}
+.a{align-self:stretch;background:#fff;border:1px solid #efe3cf;font-family:var(--ja);border-bottom-left-radius:4px}
+.a .ex{display:block;font-family:var(--serif);font-size:17px;color:var(--navy);background:#fff6df;border-left:3px solid var(--gold);
+  padding:4px 8px;margin:4px 0;border-radius:4px;cursor:pointer;white-space:normal}
+.a .ex::after{content:" ▶";font-size:11px;color:var(--pink)}
+.a.wait{color:var(--ink-soft);font-style:italic}
+.ask-input{display:flex;gap:8px;align-items:flex-end;padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px dashed #e4d6bf}
+.ask-input textarea{min-height:44px;max-height:140px;font:16px/1.4 var(--ja);resize:none}
+.ask-input .btn{flex:none;font-family:var(--ja);font-size:13px}
+.chip.askit{background:#fff1c4;color:var(--navy)}
+.msg.me .chip.askit{background:rgba(255,255,255,.22);color:#fff}
+@media (min-width:1000px){
+  .wrap,.dock-inner{transition:transform .25s ease}
+  body.ask-open .wrap,body.ask-open .dock-inner{transform:translateX(-200px)}
+}
 @media (max-width:480px){
   .page{padding:16px}
   .mic{width:68px;height:68px}
@@ -223,6 +259,15 @@ label{display:block;font-family:var(--block);font-size:11px;letter-spacing:.08em
       <div class="num" id="chapNum"></div>
       <div class="title" id="chapTitle"></div>
       <div class="note" id="chapNote"></div>
+      <div class="style-row">
+        <select id="quickRegister" aria-label="Speaking style">
+          <option value="polite">初対面・お店</option>
+          <option value="work">仕事</option>
+          <option value="neutral">普通</option>
+          <option value="casual">カジュアル</option>
+        </select>
+        <span class="ja" id="styleWho"></span>
+      </div>
     </div>
     <div class="empty" id="talkEmpty">
       <svg viewBox="0 0 64 64" aria-hidden="true"><path fill="#1b1430" d="M20 58c-4 0-6-3-6-7 0-9 5-17 10-21-1-4-2-9 0-14l4 6c2-1 6-1 8 0l4-6c2 5 1 10 0 14 5 4 8 12 8 21 0 4-2 7-6 7z"/><path d="M44 54c6 0 10-4 12-10" stroke="#1b1430" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="28" cy="20" r="1.6" fill="#f9dc7a"/><circle cx="36" cy="20" r="1.6" fill="#f9dc7a"/><path d="M26 27c4 3 8 3 12 0" stroke="#86d3c7" stroke-width="2.5" fill="none"/></svg>
@@ -259,6 +304,39 @@ label{display:block;font-family:var(--block);font-size:11px;letter-spacing:.08em
         <option value="upper-intermediate (CEFR B2)">Upper-intermediate（中上級）</option>
         <option value="advanced (CEFR C1)">Advanced（上級）</option>
       </select>
+
+      <label for="register">Speaking style（話し方の場面）</label>
+      <select id="register">
+        <option value="polite">Polite（初対面・お店で丁寧に）</option>
+        <option value="work">Work（仕事・上司や取引先）</option>
+        <option value="neutral">Neutral（普通・知り合いと）</option>
+        <option value="casual">Casual（友達とカジュアルに）</option>
+      </select>
+
+      <div class="row" style="gap:10px;flex-wrap:nowrap">
+        <div style="flex:1">
+          <label for="gender">You are</label>
+          <select id="gender">
+            <option value="woman">女性</option>
+            <option value="man">男性</option>
+            <option value="">指定なし</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label for="age">Age</label>
+          <select id="age">
+            <option value="in her/his 20s">20代</option>
+            <option value="in her/his 30s">30代</option>
+            <option value="in her/his 40s">40代</option>
+            <option value="in her/his 50s or older">50代以上</option>
+            <option value="">指定なし</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="persona">Your vibe（なりたい雰囲気・自由に）</label>
+      <input id="persona" placeholder="例: 品があって感じのいい人">
+      <div class="muted ja" style="margin-top:6px">添削・ヒント・言い換えは、この人物像のネイティブが実際に口にする話し言葉で提案されます。</div>
 
       <label for="chatModel">Conversation model</label>
       <input id="chatModel" placeholder="gemini-3.8-flash">
@@ -304,6 +382,26 @@ label{display:block;font-family:var(--block);font-size:11px;letter-spacing:.08em
   </div>
 </div>
 
+<button class="ask-tab" id="askTab" aria-label="AIに質問" aria-expanded="false">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+  <span class="ja">質問</span>
+</button>
+<aside class="ask" id="ask" aria-label="AIに質問" aria-hidden="true">
+  <div class="ask-head">
+    <div>
+      <div class="ask-title">Ask Margo</div>
+      <div class="ja ask-sub">英語のことを何でも日本語で質問できます</div>
+    </div>
+    <button class="chip" id="askClear">クリア</button>
+    <button class="ask-close" id="askClose" aria-label="閉じる">×</button>
+  </div>
+  <div class="ask-log" id="askLog"></div>
+  <form class="ask-input" id="askForm">
+    <textarea id="askText" rows="2" placeholder="例: 提案の文に「できれば」を付け足すとどうなる？"></textarea>
+    <button class="btn" type="submit" id="askSend">送信</button>
+  </form>
+</aside>
+
 <script>
 /* ---------- storage ---------- */
 const store={
@@ -318,7 +416,23 @@ That makes sense. | なるほど、納得です
 I was wondering if ... | 〜していただけないかと思って
 Can you recommend a good book? | おすすめの本はありますか？`;
 const DEFAULT_SETTINGS={apiKey:'',level:'intermediate (CEFR B1)',chatModel:'gemini-3.8-flash',ttsMode:'gemini',
-  ttsModel:'gemini-3.8-flash-lite-tts',voice:'Kore',slow:false,autoJa:false};
+  ttsModel:'gemini-3.8-flash-lite-tts',voice:'Kore',slow:false,autoJa:false,
+  register:'polite',gender:'woman',age:'in her/his 30s',persona:'品があって感じのいい人'};
+const REGISTERS={
+  polite:{ja:'初対面・お店',en:'polite and friendly, for meeting someone for the first time or talking with staff at shops, cafés, hotels and restaurants. Courteous but warm, never stiff or overly formal',
+    scene:'You are meeting the learner for the first time (e.g. as a fellow guest, a neighbor, or as shop/café staff). Stay in that light first-meeting situation.'},
+  work:{ja:'仕事',en:'professional spoken English for the workplace: talking with a manager, senior colleagues or clients. Polite, clear and diplomatic, but still natural speech, not written business English',
+    scene:'You are a colleague or client of the learner at work (meetings, small talk with a manager, asking for help, giving updates). Stay in a workplace situation.'},
+  neutral:{ja:'普通',en:'everyday neutral spoken English, as with acquaintances and coworkers you know fairly well',
+    scene:'You are an acquaintance the learner knows a little.'},
+  casual:{ja:'カジュアル',en:'casual spoken English between friends: relaxed, contractions, common everyday expressions (but nothing crude)',
+    scene:'You are a close friend of the learner.'}
+};
+function speakerProfile(){
+  const g=settings.gender,a=(settings.age||'').replace('her/his',g==='man'?'his':g==='woman'?'her':'their');
+  const who=[g?`a ${g}`:'a person',a].filter(Boolean).join(' ');
+  return `${who}${settings.persona?` (how they want to come across: ${settings.persona})`:''}`;
+}
 
 let settings=Object.assign({},DEFAULT_SETTINGS,store.get('settings',{}));
 let phrasesText=store.get('phrases',DEFAULT_PHRASES);
@@ -379,14 +493,26 @@ $('#savePhrases').onclick=()=>{phrasesText=$('#phrases').value;store.set('phrase
 $('#randomBtn').onclick=()=>{const ps=parsePhrases();if(ps.length)startChapter(ps[Math.floor(Math.random()*ps.length)])};
 
 /* ---------- settings ---------- */
+const FORM_KEYS=['apiKey','level','register','gender','age','persona','chatModel','ttsMode','ttsModel','voice'];
 function loadSettingsForm(){
-  for(const k of ['apiKey','level','chatModel','ttsMode','ttsModel','voice'])$('#'+k).value=settings[k];
+  for(const k of FORM_KEYS)$('#'+k).value=settings[k];
   $('#slow').checked=settings.slow;$('#autoJa').checked=settings.autoJa;
 }
 $('#saveSettings').onclick=()=>{
-  for(const k of ['apiKey','level','chatModel','ttsMode','ttsModel','voice'])settings[k]=$('#'+k).value.trim();
+  for(const k of FORM_KEYS)settings[k]=$('#'+k).value.trim();
+  renderStyleChip();
   settings.chatModel=settings.chatModel||DEFAULT_SETTINGS.chatModel;settings.ttsModel=settings.ttsModel||DEFAULT_SETTINGS.ttsModel;
   settings.slow=$('#slow').checked;settings.autoJa=$('#autoJa').checked;store.set('settings',settings);toast('設定を保存しました');
+};
+function renderStyleChip(){
+  $('#quickRegister').value=settings.register;
+  const g={woman:'女性',man:'男性'}[settings.gender]||'';
+  const a=($('#age').selectedOptions[0]||{}).textContent||'';
+  $('#styleWho').textContent=[a!=='指定なし'?a:'',g].join('')+(settings.persona?` · ${settings.persona}`:'');
+}
+$('#quickRegister').onchange=e=>{
+  settings.register=e.target.value;$('#register').value=settings.register;store.set('settings',settings);
+  toast(`話し方: ${REGISTERS[settings.register].ja}（次の返答から反映）`);
 };
 $('#testVoice').onclick=()=>{unlockAudio();$('#saveSettings').click();speak("Hi! I'm Margo. Shall we chat about books tonight?")};
 
@@ -402,10 +528,20 @@ async function gemini(model,body){
 function textOf(j){return (j.candidates?.[0]?.content?.parts||[]).filter(p=>p.text&&!p.thought).map(p=>p.text).join('')}
 function parseJSON(s){try{return JSON.parse(s)}catch(e){const m=s.match(/\{[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw new Error('AIの返答を読み取れませんでした')}}
 
+function styleRules(){
+  const r=REGISTERS[settings.register]||REGISTERS.polite;
+  return `LEARNER'S SPEAKING STYLE
+- The learner wants to sound like ${speakerProfile()}.
+- Register: ${r.en}.
+- Every English sentence you suggest for the learner to say ("corrected", "natural_version", hints, examples) must be what a native speaker with this profile would actually say out loud in that situation: natural spoken English with contractions and everyday phrasing, not textbook or written English, and at the right level of politeness.`;
+}
 function systemPrompt(){
   return `You are "Margo", a warm, witty conversation partner who runs a cozy little bookshop café. You are helping a Japanese learner practice spoken English.
 Learner level: ${settings.level}.
 Today's target phrase: "${cur.phrase}"${cur.note?` (learner's note: ${cur.note})`:''}.
+
+${styleRules()}
+- Scene: ${REGISTERS[settings.register]?.scene||''} You keep your Margo personality, but play this role.
 
 CONVERSATION
 - Chat naturally about everyday topics connected to the target phrase. Set up small situations where the learner would naturally want to use it.
@@ -415,6 +551,7 @@ CONVERSATION
 CORRECTION (for every learner turn)
 - "transcript": write EXACTLY what the learner said, word for word, keeping every grammar mistake, wrong word and missing article. Do NOT fix anything here. Leave out fillers like "uh/um". Write [inaudible] for parts you cannot hear.
 - Check grammar, word choice, prepositions, articles, tense, word order and unnatural phrasing. Ignore punctuation, capitalization and accent.
+- Also check the register: if it is correct English but would sound too blunt, too stiff, too casual or textbook-like for the learner's style and situation, treat that as a mistake and explain it in Japanese.
 - If there are mistakes: has_mistake=true, "corrected" = the full sentence with minimal edits, "points" = one item per fix (wrong part, right part, one short sentence in Japanese explaining why).
 - If there are no mistakes: has_mistake=false, "corrected" = transcript, "points" = [], and if a native speaker would say it more naturally, give that in "natural_version" (otherwise empty string).
 - If the learner used Japanese, put a natural English version in "corrected", has_mistake=true, and explain in "points".
@@ -482,7 +619,7 @@ function addAI(text,ja){
   const tools=el('div','tools');
   const play=el('button','chip','▶ もう一度');play.onclick=()=>speak(text,m);
   const tr=el('button','chip','和訳');tr.onclick=()=>m.classList.toggle('showja');
-  tools.append(play,tr);m.appendChild(tools);
+  tools.append(play,tr,askChip(text));m.appendChild(tools);
   $('#log').appendChild(m);scrollDown();speak(text,m);
 }
 function addMe(text){
@@ -498,14 +635,14 @@ function addCorrection(r,said){
     if(r.natural_version&&r.natural_version.trim()&&r.natural_version.trim()!==said.trim()){
       c.appendChild(el('div','pt ja','もっと自然に言うなら:'));
       const f=el('div','fixed',r.natural_version);c.appendChild(f);
-      const b=el('button','chip','▶ 聞く');b.onclick=()=>speak(r.natural_version);c.appendChild(b);
-    }
+      const b=el('button','chip','▶ 聞く');b.onclick=()=>speak(r.natural_version);c.append(b,' ',askChip(r.natural_version));
+    }else c.appendChild(askChip(said));
   }else{
     c.appendChild(el('div','head','A little margin note'));
     c.appendChild(el('div','fixed',r.corrected));
     pts.forEach(p=>{const d=el('div','pt');const w=el('span','w',p.wrong);const ar=document.createTextNode(' → ');const rr=el('span','r',p.right);
       d.append(w,ar,rr);d.appendChild(el('span','why',p.why_ja));c.appendChild(d);});
-    const b=el('button','chip','▶ 正しい文を聞く');b.onclick=()=>speak(r.corrected);c.appendChild(b);
+    const b=el('button','chip','▶ 正しい文を聞く');b.onclick=()=>speak(r.corrected);c.append(b,' ',askChip(r.corrected));
   }
   if(r.used_target_phrase)c.appendChild(el('span','badge','★ Target phrase used!'));
   $('#log').appendChild(c);scrollDown();
@@ -524,7 +661,7 @@ function renderNotebook(){
     if(n.corrected)it.appendChild(el('div','fixed',n.corrected));
     (n.points||[]).forEach(p=>{const d=el('div','pt');d.append(el('span','r',p.wrong+' → '+p.right));d.appendChild(el('span','why',p.why_ja));it.appendChild(d)});
     if(n.natural){const d=el('div','pt ja','自然な言い方: ');d.appendChild(el('span','r',n.natural));it.appendChild(d)}
-    const b=el('button','chip','▶');b.onclick=()=>speak(n.corrected||n.natural);it.appendChild(b);
+    const b=el('button','chip','▶');b.onclick=()=>speak(n.corrected||n.natural);it.append(b,' ',askChip(n.corrected||n.natural||n.said));
     box.appendChild(it);
   });
 }
@@ -534,13 +671,85 @@ $('#clearNb').onclick=()=>{if(confirm('Notebook を空にしますか？')){note
 $('#hintBtn').onclick=()=>run(async()=>{
   setStatus('Looking for ideas…');
   const contents=historyContents();
-  contents.push({role:'user',parts:[{text:'(I am stuck. Give 3 short things I could say next as my reply to your last question, at my level. At least one should use the target phrase. Include Japanese meanings.)'}]});
+  contents.push({role:'user',parts:[{text:'(I am stuck. Give 3 short things I could say next as my reply to your last question, at my level, in natural spoken English that fits my speaking style. At least one should use the target phrase. Include Japanese meanings.)'}]});
   const j=await gemini(settings.chatModel,{systemInstruction:{parts:[{text:systemPrompt()}]},contents,
     generationConfig:{responseMimeType:'application/json',responseSchema:HINT_SCHEMA}});
   const r=parseJSON(textOf(j));const box=$('#hints');box.innerHTML='';
-  (r.hints||[]).forEach(h=>{const d=el('div','hint');d.appendChild(el('div','en',h.en));d.appendChild(el('div','jp',h.ja));d.onclick=()=>speak(h.en);box.appendChild(d)});
+  (r.hints||[]).forEach(h=>{const d=el('div','hint');d.appendChild(el('div','en',h.en));d.appendChild(el('div','jp',h.ja));d.onclick=()=>speak(h.en);
+    const q=askChip(h.en);q.style.marginTop='6px';q.addEventListener('click',e=>e.stopPropagation());d.appendChild(q);box.appendChild(d)});
   scrollDown();
 });
+
+/* ---------- ask drawer ---------- */
+let askHistory=store.get('ask',[]); // [{role:'user'|'model',text}]
+let askBusy=false;
+const ASK_EXAMPLES=['提案された文に「できれば」を付け足すとどうなる？','この表現、お店の人に言っても失礼じゃない？','もっと柔らかく言うには？'];
+function setAskOpen(open){
+  document.body.classList.toggle('ask-open',open);
+  $('#askTab').setAttribute('aria-expanded',open);$('#ask').setAttribute('aria-hidden',!open);
+  if(open)setTimeout(()=>{const l=$('#askLog');l.scrollTop=l.scrollHeight},50);
+}
+$('#askTab').onclick=()=>setAskOpen(true);
+$('#askClose').onclick=()=>setAskOpen(false);
+$('#askClear').onclick=()=>{askHistory=[];store.set('ask',askHistory);renderAsk()};
+function askAbout(text){
+  setAskOpen(true);const t=$('#askText');t.value=`「${text}」`;t.focus();t.setSelectionRange(t.value.length,t.value.length);
+}
+function renderAnswer(box,text){
+  // Lines starting with "» " are English example sentences: show them as tappable to hear.
+  text.split('\n').forEach((line,i,arr)=>{
+    const m=line.match(/^\s*»\s*(.+)$/);
+    if(m){const ex=el('span','ex',m[1]);ex.onclick=()=>{unlockAudio();speak(m[1])};box.appendChild(ex)}
+    else box.appendChild(document.createTextNode(line+(i<arr.length-1?'\n':'')));
+  });
+}
+function renderAsk(){
+  const log=$('#askLog');log.innerHTML='';
+  if(!askHistory.length){
+    const e=el('div','ask-empty ja','会話中の文や提案について、気軽に聞いてください。各メッセージの「💬 質問」から文を引用できます。');
+    ASK_EXAMPLES.forEach(x=>{const b=el('button','chip',x);b.onclick=()=>{$('#askText').value=x;$('#askText').focus()};e.appendChild(b)});
+    log.appendChild(e);return;
+  }
+  askHistory.forEach(h=>{
+    if(h.role==='user')log.appendChild(el('div','q',h.text));
+    else{const a=el('div','a');renderAnswer(a,h.text);log.appendChild(a)}
+  });
+  log.scrollTop=log.scrollHeight;
+}
+function askSystemPrompt(){
+  const ctx=cur?`The learner is currently practicing the phrase "${cur.phrase}"${cur.note?` (${cur.note})`:''}. Recent practice conversation (Margo = AI partner, Learner = the learner):
+${cur.history.filter(h=>!h.text.startsWith('(')).slice(-8).map(h=>(h.role==='model'?'Margo: ':'Learner: ')+h.text).join('\n')}`:'The learner is not in a practice conversation right now.';
+  return `You are "Margo", a friendly English coach for a Japanese learner. Answer the learner's questions about English in Japanese, kindly and concisely (a few short paragraphs at most). No markdown headings, no bold, no tables.
+Learner level: ${settings.level}.
+
+${styleRules()}
+- If the question is about a different situation (e.g. work vs. a friend), adapt to that situation and say so.
+
+FORMAT
+- Put every English example sentence on its own line starting with "» " (for example: » Would you mind if I sat here?). Do not put Japanese on those lines.
+- When the learner asks how a sentence changes if they add or change words, give the full new sentence, then briefly explain the nuance in Japanese. If it would sound unnatural, say so and offer a natural alternative.
+
+CONTEXT
+${ctx}`;
+}
+$('#askForm').onsubmit=async e=>{
+  e.preventDefault();
+  const q=$('#askText').value.trim();if(!q||askBusy)return;
+  unlockAudio();askBusy=true;$('#askSend').disabled=true;$('#askText').value='';
+  askHistory.push({role:'user',text:q});renderAsk();
+  const wait=el('div','a wait','考え中…');$('#askLog').appendChild(wait);$('#askLog').scrollTop=1e9;
+  try{
+    const j=await gemini(settings.chatModel,{systemInstruction:{parts:[{text:askSystemPrompt()}]},
+      contents:askHistory.slice(-20).map(h=>({role:h.role,parts:[{text:h.text}]})),generationConfig:{temperature:0.6}});
+    const a=textOf(j).trim();if(!a)throw new Error('AIから返答がありませんでした');
+    askHistory.push({role:'model',text:a});askHistory=askHistory.slice(-60);store.set('ask',askHistory);
+  }catch(err){
+    askHistory.pop();$('#askText').value=q;toast(err.message||String(err),5000);
+  }finally{askBusy=false;$('#askSend').disabled=false;renderAsk()}
+};
+$('#askText').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)&&!e.isComposing)$('#askForm').requestSubmit()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')setAskOpen(false)});
+function askChip(text){const b=el('button','chip askit','💬 質問');b.onclick=()=>askAbout(text);return b}
 
 /* ---------- typed input ---------- */
 function sendTyped(){
@@ -657,7 +866,7 @@ function speakBrowser(text,done){
 }
 
 /* ---------- init ---------- */
-loadSettingsForm();renderShelf();
+loadSettingsForm();renderStyleChip();renderShelf();renderAsk();
 if(!settings.apiKey)setTimeout(()=>toast('まず Settings で Gemini API key を入力してください',5000),600);
 if(location.protocol==='file:')setTimeout(()=>toast('マイクを使うには start.command から開いてください（localhost）',6000),2500);
 </script>
