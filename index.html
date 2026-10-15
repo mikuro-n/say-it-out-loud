@@ -170,6 +170,7 @@ label{display:block;font-family:var(--block);font-size:11px;letter-spacing:.08em
 .nb-item{border-bottom:1px dashed #e4d6bf;padding:12px 0}
 .nb-item:last-child{border-bottom:0}
 .nb-date{font-family:var(--script);color:var(--pink);font-size:16px}
+.nb-q{font-family:var(--ja);font-size:12px;color:var(--ink-soft);margin:2px 0}
 
 /* Waiting indicator */
 .waitbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:16;overflow:hidden;opacity:0;transition:opacity .2s}
@@ -197,7 +198,7 @@ body.waiting-on .waitbar{opacity:1}
   background:var(--gold);color:var(--navy);border-radius:14px 0 0 14px;padding:12px 8px 10px 10px;box-shadow:var(--shadow);
   display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px}
 .ask-tab svg{width:20px;height:20px}
-.ask{position:fixed;top:0;right:0;bottom:0;z-index:10;width:min(400px,100vw);background:var(--paper);
+.ask{position:fixed;top:0;right:0;bottom:0;z-index:10;width:min(var(--ask-w,400px),100vw);background:var(--paper);
   box-shadow:-10px 0 34px rgba(18,8,40,.4);display:flex;flex-direction:column;
   transform:translateX(105%);transition:transform .25s ease;padding-top:env(safe-area-inset-top)}
 body.ask-open .ask{transform:none}
@@ -213,19 +214,36 @@ body.ask-open .ask-tab{display:none}
 .q,.a{padding:10px 12px;border-radius:14px;font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
 .q{align-self:flex-end;max-width:88%;background:var(--pink);color:#fff;font-family:var(--ja);border-bottom-right-radius:4px}
 .a{align-self:stretch;background:#fff;border:1px solid #efe3cf;font-family:var(--ja);border-bottom-left-radius:4px}
-.a .ex{display:block;font-family:var(--serif);font-size:17px;color:var(--navy);background:#fff6df;border-left:3px solid var(--gold);
+.ask-grip-x{position:absolute;left:-9px;top:0;bottom:0;width:18px;cursor:ew-resize;touch-action:none;z-index:1;
+  display:flex;align-items:center;justify-content:center}
+.ask-grip-x::before{content:"";width:6px;height:56px;border-radius:999px;background:var(--navy);opacity:.5;box-shadow:0 0 0 2px var(--paper)}
+.ask-grip-x:hover::before,.ask-grip-x.drag::before{opacity:.8}
+.ask-grip-y{height:16px;margin-top:-8px;margin-bottom:-8px;position:relative;z-index:1;cursor:ns-resize;touch-action:none;
+  display:flex;align-items:center;justify-content:center}
+.ask-grip-y::before{content:"";width:56px;height:6px;border-radius:999px;background:var(--navy);opacity:.3;box-shadow:0 0 0 2px var(--paper)}
+.ask-grip-y:hover::before,.ask-grip-y.drag::before{opacity:.8}
+body.resizing{user-select:none;-webkit-user-select:none}
+body.resizing .ask{transition:none}
+.a .ex{display:flex;align-items:flex-start;gap:8px;font-family:var(--serif);font-size:17px;color:var(--navy);background:#fff6df;border-left:3px solid var(--gold);
   padding:4px 8px;margin:4px 0;border-radius:4px;cursor:pointer;white-space:normal}
-.a .ex::after{content:" ▶";font-size:11px;color:var(--pink)}
+.a .ex .say{flex:1;cursor:pointer}
+.a .ex .say::after{content:" ▶";font-size:11px;color:var(--pink)}
+.a .ex .add{flex:none;width:28px;height:28px;border-radius:50%;border:0;cursor:pointer;background:var(--pink);color:#fff;
+  font:700 18px/1 var(--body);display:flex;align-items:center;justify-content:center;margin-top:1px}
+.a .ex .add.done{background:var(--teal-deep);font-size:14px}
 .a.wait{color:var(--ink-soft);font-style:italic}
 .a.ask-err{border:1.5px dashed var(--coral);background:#fff8ef;color:var(--navy)}
 .ask-input{display:flex;gap:8px;align-items:flex-end;padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px dashed #e4d6bf}
-.ask-input textarea{min-height:44px;max-height:140px;font:16px/1.4 var(--ja);resize:none}
+.ask-input{align-items:stretch}
+.ask-input .btn{align-self:flex-end}
+.ask-input textarea{height:var(--ask-input-h,64px);min-height:44px;font:16px/1.4 var(--ja);resize:none}
 .ask-input .btn{flex:none;font-family:var(--ja);font-size:13px}
 .chip.askit{background:#fff1c4;color:var(--navy)}
 .msg.me .chip.askit{background:rgba(255,255,255,.22);color:#fff}
 @media (min-width:1000px){
   .wrap,.dock-inner{transition:transform .25s ease}
-  body.ask-open .wrap,body.ask-open .dock-inner{transform:translateX(-200px)}
+  /* slide the page left just enough to clear the panel, but never off the left edge */
+  body.ask-open .wrap,body.ask-open .dock-inner{transform:translateX(calc(-1 * clamp(0px, var(--ask-w,400px) + 396px - 50vw, 50vw - 380px)))}
 }
 @media (max-width:480px){
   .page{padding:16px}
@@ -424,6 +442,7 @@ body.ask-open .ask-tab{display:none}
   <span class="ja">質問</span>
 </button>
 <aside class="ask" id="ask" aria-label="AIに質問" aria-hidden="true">
+  <div class="ask-grip-x" id="askGripX" title="ドラッグで幅を変更" aria-hidden="true"></div>
   <div class="ask-head">
     <div>
       <div class="ask-title">Ask Margo</div>
@@ -433,6 +452,7 @@ body.ask-open .ask-tab{display:none}
     <button class="ask-close" id="askClose" aria-label="閉じる">×</button>
   </div>
   <div class="ask-log" id="askLog"></div>
+  <div class="ask-grip-y" id="askGripY" title="ドラッグで入力欄の高さを変更" aria-hidden="true"></div>
   <form class="ask-input" id="askForm">
     <textarea id="askText" rows="2" placeholder="例: 提案の文に「できれば」を付け足すとどうなる？"></textarea>
     <button class="btn" type="submit" id="askSend">送信</button>
@@ -810,9 +830,16 @@ function addCorrection(r,said){
 }
 function renderNotebook(){
   const box=$('#nbList');box.innerHTML='';
-  if(!notebook.length){box.appendChild(el('div','muted ja','まだ添削メモはありません。会話すると、ここに貯まっていきます。'));return;}
+  if(!notebook.length){box.appendChild(el('div','muted ja','まだメモはありません。会話の添削や、Ask Margo で ＋ を押した英文がここに貯まっていきます。'));return;}
   notebook.forEach(n=>{
     const it=el('div','nb-item');
+    if(n.kind==='saved'){
+      it.appendChild(el('div','nb-date',new Date(n.at).toLocaleDateString('ja-JP')+' · Ask Margo'));
+      if(n.q)it.appendChild(el('div','nb-q',n.q.length>60?n.q.slice(0,60)+'…':n.q));
+      it.appendChild(el('div','fixed',n.en));
+      const b=el('button','chip','▶');b.onclick=()=>speak(n.en);it.append(b,' ',askChip(n.en));
+      box.appendChild(it);return;
+    }
     it.appendChild(el('div','nb-date',new Date(n.at).toLocaleDateString('ja-JP')+' · '+n.phrase));
     const s=el('div','pt');s.appendChild(el('span','w',n.said));it.appendChild(s);
     if(n.corrected)it.appendChild(el('div','fixed',n.corrected));
@@ -847,16 +874,56 @@ function setAskOpen(open){
   if(open)setTimeout(()=>{const l=$('#askLog');l.scrollTop=l.scrollHeight},50);
 }
 $('#askTab').onclick=()=>setAskOpen(true);
+const askSize=Object.assign({w:400,h:64},store.get('askSize',{}));
+function applyAskSize(){
+  document.documentElement.style.setProperty('--ask-w',askSize.w+'px');
+  document.documentElement.style.setProperty('--ask-input-h',askSize.h+'px');
+}
+// Drag helper: calls move(dx,dy) from the pointer-down position, saves on release.
+function dragHandle(handle,start,move){
+  handle.addEventListener('pointerdown',e=>{
+    e.preventDefault();handle.setPointerCapture(e.pointerId);
+    const x0=e.clientX,y0=e.clientY,s0=start();
+    handle.classList.add('drag');document.body.classList.add('resizing');
+    const onMove=ev=>{move(s0,ev.clientX-x0,ev.clientY-y0);applyAskSize()};
+    const onUp=()=>{handle.classList.remove('drag');document.body.classList.remove('resizing');
+      handle.removeEventListener('pointermove',onMove);store.set('askSize',askSize)};
+    handle.addEventListener('pointermove',onMove);
+    handle.addEventListener('pointerup',onUp,{once:true});handle.addEventListener('pointercancel',onUp,{once:true});
+  });
+}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+dragHandle($('#askGripX'),()=>$('#ask').getBoundingClientRect().width,
+  (w0,dx)=>{askSize.w=Math.round(clamp(w0-dx,280,Math.min(900,innerWidth)))});
+dragHandle($('#askGripY'),()=>$('#askText').getBoundingClientRect().height,
+  (h0,dx,dy)=>{askSize.h=Math.round(clamp(h0-dy,44,$('#ask').clientHeight*0.6))});
+applyAskSize();
 $('#askClose').onclick=()=>setAskOpen(false);
 $('#askClear').onclick=()=>{askHistory=[];store.set('ask',askHistory);renderAsk()};
 function askAbout(text){
   setAskOpen(true);const t=$('#askText');t.value=`「${text}」`;t.focus();t.setSelectionRange(t.value.length,t.value.length);
 }
-function renderAnswer(box,text){
-  // Lines starting with "» " are English example sentences: show them as tappable to hear.
+const isSaved=en=>notebook.some(n=>n.kind==='saved'&&n.en===en);
+function saveToNotebook(en,q){
+  if(isSaved(en))return false;
+  notebook.unshift({at:new Date().toISOString(),kind:'saved',phrase:'Ask Margo',en,q:q||''});
+  notebook=notebook.slice(0,500);store.set('notebook',notebook);return true;
+}
+function renderAnswer(box,text,q){
+  // Lines starting with "» " are English example sentences: tap to hear, + to keep in the Notebook.
   text.split('\n').forEach((line,i,arr)=>{
     const m=line.match(/^\s*»\s*(.+)$/);
-    if(m){const ex=el('span','ex',m[1]);ex.onclick=()=>{unlockAudio();speak(m[1])};box.appendChild(ex)}
+    if(m){
+      const en=m[1].trim(),ex=el('span','ex');
+      const say=el('span','say',en);say.onclick=()=>{unlockAudio();speak(en)};
+      const add=el('button','add'+(isSaved(en)?' done':''),isSaved(en)?'✓':'+');
+      add.title='Notebook に追加';add.setAttribute('aria-label','Notebook に追加');
+      add.onclick=()=>{
+        if(saveToNotebook(en,q))toast('Notebook に追加しました');else toast('もう Notebook に入っています');
+        add.textContent='✓';add.classList.add('done');
+      };
+      ex.append(say,add);box.appendChild(ex);
+    }
     else box.appendChild(document.createTextNode(line+(i<arr.length-1?'\n':'')));
   });
 }
@@ -867,9 +934,9 @@ function renderAsk(){
     ASK_EXAMPLES.forEach(x=>{const b=el('button','chip',x);b.onclick=()=>{$('#askText').value=x;$('#askText').focus()};e.appendChild(b)});
     log.appendChild(e);return;
   }
-  askHistory.forEach(h=>{
+  askHistory.forEach((h,i)=>{
     if(h.role==='user')log.appendChild(el('div','q',h.text));
-    else{const a=el('div','a');renderAnswer(a,h.text);log.appendChild(a)}
+    else{const a=el('div','a');renderAnswer(a,h.text,askHistory[i-1]?.text);log.appendChild(a)}
   });
   log.scrollTop=log.scrollHeight;
 }
