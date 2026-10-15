@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#241b4d">
+<title>Say It Out Loud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Serif+Display:ital@0;1&family=Dancing+Script:wght@600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dusk-1:#221a4a; --dusk-2:#46337a; --dusk-3:#a9558c; --dusk-4:#ef8f68;
+  --cream:#fff3df; --paper:#fffaf2; --ink:#2a2140; --ink-soft:#655a7d;
+  --pink:#e8457f; --pink-soft:#ffd3e2; --teal:#86d3c7; --teal-deep:#2c7b74;
+  --sky:#c3e4ee; --gold:#f9dc7a; --coral:#f2875e; --navy:#1f2a48;
+  --brick:#c4553d; --purple:#4b3a8c;
+  --serif:"DM Serif Display", Georgia, serif;
+  --body:"Lora", Georgia, serif;
+  --script:"Dancing Script", cursive;
+  --block:"Archivo Black", Impact, sans-serif;
+  --ja:"Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+  --shadow:0 12px 34px rgba(18,8,40,.38);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  background-color:var(--dusk-1);
+  color:var(--ink);font-family:var(--body);
+  -webkit-font-smoothing:antialiased;
+}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,var(--dusk-1) 0%,var(--dusk-2) 34%,var(--dusk-3) 70%,var(--dusk-4) 100%)}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+   radial-gradient(1.4px 1.4px at 12% 18%,#fff8 50%,transparent 51%),
+   radial-gradient(1.2px 1.2px at 78% 9%,#fff9 50%,transparent 51%),
+   radial-gradient(1.6px 1.6px at 55% 24%,#fff7 50%,transparent 51%),
+   radial-gradient(1px 1px at 30% 33%,#fff6 50%,transparent 51%),
+   radial-gradient(1.3px 1.3px at 90% 30%,#fff8 50%,transparent 51%),
+   radial-gradient(1px 1px at 5% 42%,#fff5 50%,transparent 51%);}
+#lights{position:absolute;top:0;left:0;width:100%;height:130px;pointer-events:none;z-index:1}
+#lights circle{fill:var(--gold);filter:drop-shadow(0 0 4px #ffe9a0)}
+@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.35}}
+.wrap{position:relative;z-index:2;max-width:760px;margin:0 auto;padding:0 16px 150px}
+
+/* Header */
+header{padding:58px 0 18px;text-align:center;color:var(--cream);position:relative}
+.moon{position:absolute;right:12%;top:46px;width:30px;height:30px;border-radius:50%;
+  box-shadow:9px -5px 0 0 #fff2c4;transform:rotate(-15deg)}
+.kicker{font-family:var(--body);font-style:italic;font-size:13px;letter-spacing:.06em;color:var(--pink-soft);opacity:.9}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,10vw,64px);line-height:.95;margin:6px 0 0;
+  color:var(--gold);text-shadow:0 2px 0 rgba(0,0,0,.18)}
+h1 em{color:var(--cream)}
+.subtitle{font-family:var(--script);font-size:24px;color:var(--pink-soft);margin-top:4px}
+
+/* Nav */
+nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 0 18px}
+nav button{font-family:var(--block);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+  border:0;border-radius:999px;padding:9px 14px;cursor:pointer;background:rgba(255,243,223,.14);color:var(--cream)}
+nav button.on{background:var(--cream);color:var(--purple)}
+
+section{display:none}
+section.on{display:block}
+
+/* Card / page */
+.page{background:var(--paper);border-radius:6px 18px 18px 6px;box-shadow:var(--shadow);padding:20px;position:relative;
+  border-left:10px solid var(--navy)}
+.page h2{font-family:var(--block);font-size:22px;letter-spacing:.01em;margin:0 0 4px;color:var(--navy);text-transform:uppercase}
+.page .script{font-family:var(--script);color:var(--pink);font-size:22px}
+.ja{font-family:var(--ja)}
+.muted{color:var(--ink-soft);font-size:14px}
+
+/* Shelf */
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:16px 0}
+.book{border:0;text-align:left;cursor:pointer;border-radius:4px 12px 12px 4px;padding:14px 12px 12px 18px;min-height:132px;
+  position:relative;box-shadow:0 8px 18px rgba(20,10,40,.28);display:flex;flex-direction:column;justify-content:space-between;
+  transition:transform .15s ease}
+.book:hover{transform:translateY(-3px) rotate(-.6deg)}
+.book::before{content:"";position:absolute;left:6px;top:0;bottom:0;width:2px;background:rgba(0,0,0,.12)}
+.book .en{font-family:var(--serif);font-size:19px;line-height:1.12}
+.book .note{font-family:var(--ja);font-size:12px;opacity:.85;margin-top:8px}
+.book .tag{font-family:var(--script);font-size:16px;opacity:.9}
+.c0{background:var(--pink);color:#fff}
+.c0 .en{color:var(--teal)}
+.c1{background:var(--sky);color:var(--navy)}
+.c2{background:linear-gradient(160deg,var(--purple),#7a4f9c 60%,var(--coral));color:var(--cream)}
+.c2 .en{color:var(--gold)}
+.c3{background:var(--coral);color:#fff}
+.c4{background:var(--teal);color:var(--navy)}
+.c5{background:var(--navy);color:var(--cream)}
+.c5 .en{color:var(--pink-soft)}
+
+textarea,input,select{width:100%;font:15px/1.5 var(--body);border:1.5px solid #e6d9c4;border-radius:10px;padding:10px 12px;background:#fff;color:var(--ink)}
+textarea{min-height:170px;resize:vertical}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--pink);border-color:transparent}
+label{display:block;font-family:var(--block);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);margin:14px 0 6px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--block);font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:0;border-radius:999px;
+  padding:11px 16px;cursor:pointer;background:var(--pink);color:#fff}
+.btn.alt{background:var(--navy)}
+.btn.ghost{background:transparent;color:var(--purple);border:1.5px solid var(--purple)}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* Talk */
+.chapter{text-align:center;color:var(--cream);margin-bottom:14px}
+.chapter .num{font-family:var(--script);font-size:22px;color:var(--pink-soft)}
+.chapter .title{font-family:var(--serif);font-size:30px;line-height:1.1;color:var(--gold)}
+.chapter .note{font-family:var(--ja);font-size:13px;opacity:.85;margin-top:4px}
+.empty{color:var(--cream);text-align:center;padding:30px 10px}
+.empty svg{width:70px;height:70px;margin-bottom:6px}
+
+.log{display:flex;flex-direction:column;gap:12px}
+.msg{max-width:88%;padding:12px 14px;border-radius:16px;box-shadow:0 6px 16px rgba(20,10,40,.22);position:relative;font-size:16px;line-height:1.5}
+.msg.ai{align-self:flex-start;background:var(--paper);border-bottom-left-radius:4px}
+.msg.me{align-self:flex-end;background:var(--pink);color:#fff;border-bottom-right-radius:4px}
+.msg .who{font-family:var(--script);font-size:16px;color:var(--pink);display:block;margin-bottom:2px}
+.msg.me .who{color:var(--pink-soft)}
+.msg .tools{display:flex;gap:6px;margin-top:8px}
+.chip{font-family:var(--ja);font-size:12px;border:0;border-radius:999px;padding:5px 10px;cursor:pointer;background:#f3e8d6;color:var(--purple)}
+.msg.me .chip{background:rgba(255,255,255,.22);color:#fff}
+.msg .jp{display:none;font-family:var(--ja);font-size:14px;color:var(--ink-soft);margin-top:6px;border-top:1px dashed #e4d6bf;padding-top:6px}
+.msg.showja .jp{display:block}
+.msg.speaking{outline:3px solid var(--gold)}
+
+/* Margin note (correction) */
+.note-card{align-self:stretch;background:#fffdf6;border-radius:10px;padding:12px 14px 12px 16px;
+  border-left:5px solid var(--teal-deep);box-shadow:0 6px 16px rgba(20,10,40,.2);
+  background-image:repeating-linear-gradient(transparent 0 27px,#eadfcb 27px 28px)}
+.note-card.good{border-left-color:var(--gold)}
+.note-card .head{font-family:var(--script);font-size:20px;color:var(--teal-deep)}
+.note-card.good .head{color:#b8862b}
+.note-card .fixed{font-family:var(--serif);font-size:19px;color:var(--navy);margin:4px 0}
+.pt{font-size:15px;margin:6px 0}
+.pt .w{text-decoration:line-through;text-decoration-color:var(--pink);text-decoration-thickness:2px;color:#9a6b7c}
+.pt .r{color:var(--teal-deep);font-weight:600}
+.pt .why{display:block;font-family:var(--ja);font-size:13px;color:var(--ink-soft)}
+.badge{display:inline-block;font-family:var(--block);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--gold);color:var(--navy);padding:3px 8px;border-radius:999px;margin-top:6px}
+
+.status{color:var(--cream);text-align:center;font-style:italic;min-height:24px;margin-top:10px}
+
+/* Dock */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:5;padding:10px 16px calc(14px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,transparent,rgba(34,26,74,.85) 35%)}
+.dock-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.mic{flex:none;width:76px;height:76px;border-radius:50%;border:3px solid #d9d2ff;cursor:pointer;
+  background:radial-gradient(circle at 35% 30%,#8f7cff,#4b3a8c 70%);color:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.12),var(--shadow);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:var(--block);font-size:10px;letter-spacing:.06em}
+.mic svg{width:28px;height:28px}
+.mic.rec{background:radial-gradient(circle at 35% 30%,#ff8fb5,var(--pink) 70%);animation:pulse 1.2s infinite}
+.mic.busy{background:radial-gradient(circle at 35% 30%,#ffd88f,var(--coral) 70%)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(232,69,127,.6)}100%{box-shadow:0 0 0 18px rgba(232,69,127,0)}}
+.typebox{flex:1;display:flex;gap:6px;background:var(--paper);border-radius:999px;padding:5px 5px 5px 14px;box-shadow:var(--shadow)}
+.typebox input{border:0;padding:8px 0;background:transparent}
+.typebox input:focus{outline:none}
+.typebox button{flex:none}
+.hint-btn{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--gold);color:var(--navy);font-family:var(--serif);font-size:20px;cursor:pointer;box-shadow:var(--shadow)}
+
+.hints{display:flex;flex-direction:column;gap:8px}
+.hint{background:rgba(255,243,223,.95);border-radius:10px;padding:10px 12px;border-left:4px solid var(--gold)}
+.hint .en{font-family:var(--serif);font-size:17px;color:var(--navy)}
+.hint .jp{font-family:var(--ja);font-size:12px;color:var(--ink-soft)}
+
+/* Notebook */
+.nb-item{border-bottom:1px dashed #e4d6bf;padding:12px 0}
+.nb-item:last-child{border-bottom:0}
+.nb-date{font-family:var(--script);color:var(--pink);font-size:16px}
+
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:var(--navy);color:var(--cream);padding:10px 16px;border-radius:999px;
+  font-family:var(--ja);font-size:13px;z-index:20;box-shadow:var(--shadow);display:none;max-width:90%}
+.toast.on{display:block}
+@media (max-width:480px){
+  .page{padding:16px}
+  .mic{width:68px;height:68px}
+}
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<svg id="lights" aria-hidden="true"></svg>
+<div class="toast" id="toast"></div>
+
+<div class="wrap">
+  <header>
+    <div class="moon"></div>
+    <div class="kicker">“A conversation you'll want to sink into.”</div>
+    <h1>Say It <em>Out</em> Loud</h1>
+    <div class="subtitle">a novel way to practice English</div>
+  </header>
+
+  <nav>
+    <button data-tab="shelf" class="on">Shelf</button>
+    <button data-tab="talk">Talk</button>
+    <button data-tab="notebook">Notebook</button>
+    <button data-tab="settings">Settings</button>
+  </nav>
+
+  <!-- SHELF -->
+  <section id="shelf" class="on">
+    <div class="page">
+      <h2>Your Phrase Shelf</h2>
+      <div class="script">pick a book, start a chapter</div>
+      <div class="shelf" id="books"></div>
+      <div class="row">
+        <button class="btn" id="randomBtn">Surprise me</button>
+        <button class="btn ghost" id="editToggle">Edit phrases</button>
+      </div>
+      <div id="editor" style="display:none">
+        <label for="phrases">Phrases（1行に1つ。「|」の後は日本語メモ）</label>
+        <textarea id="phrases" spellcheck="false"></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="btn alt" id="savePhrases">Save</button>
+          <span class="muted ja">例: I'm looking forward to it. | 楽しみにしています</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TALK -->
+  <section id="talk">
+    <div class="chapter" id="chapter" style="display:none">
+      <div class="num" id="chapNum"></div>
+      <div class="title" id="chapTitle"></div>
+      <div class="note" id="chapNote"></div>
+    </div>
+    <div class="empty" id="talkEmpty">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path fill="#1b1430" d="M20 58c-4 0-6-3-6-7 0-9 5-17 10-21-1-4-2-9 0-14l4 6c2-1 6-1 8 0l4-6c2 5 1 10 0 14 5 4 8 12 8 21 0 4-2 7-6 7z"/><path d="M44 54c6 0 10-4 12-10" stroke="#1b1430" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="28" cy="20" r="1.6" fill="#f9dc7a"/><circle cx="36" cy="20" r="1.6" fill="#f9dc7a"/><path d="M26 27c4 3 8 3 12 0" stroke="#86d3c7" stroke-width="2.5" fill="none"/></svg>
+      <div class="ja">Shelf からフレーズを選ぶと会話が始まります</div>
+    </div>
+    <div class="log" id="log"></div>
+    <div class="hints" id="hints" style="margin-top:12px"></div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <!-- NOTEBOOK -->
+  <section id="notebook">
+    <div class="page">
+      <h2>Margin Notes</h2>
+      <div class="script">every correction, kept for later</div>
+      <div id="nbList" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:12px"><button class="btn ghost" id="clearNb">Clear notebook</button></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="settings">
+    <div class="page">
+      <h2>Settings</h2>
+      <div class="script">behind the cover</div>
+      <label for="apiKey">Gemini API key</label>
+      <input id="apiKey" type="password" autocomplete="off" placeholder="AIza...">
+      <div class="muted ja" style="margin-top:6px">Google AI Studio（aistudio.google.com/apikey）で取得。キーはこのブラウザ内にだけ保存されます。</div>
+
+      <label for="level">Level</label>
+      <select id="level">
+        <option value="beginner (CEFR A2)">Beginner（初級）</option>
+        <option value="intermediate (CEFR B1)">Intermediate（中級）</option>
+        <option value="upper-intermediate (CEFR B2)">Upper-intermediate（中上級）</option>
+        <option value="advanced (CEFR C1)">Advanced（上級）</option>
+      </select>
+
+      <label for="chatModel">Conversation model</label>
+      <input id="chatModel" placeholder="gemini-3.8-flash">
+
+      <label for="ttsMode">AI voice</label>
+      <select id="ttsMode">
+        <option value="gemini">Gemini voice（自然な声）</option>
+        <option value="browser">Browser voice（無料・速い）</option>
+        <option value="off">Off（読み上げなし）</option>
+      </select>
+
+      <label for="ttsModel">Voice model</label>
+      <input id="ttsModel" placeholder="gemini-3.8-flash-lite-tts">
+
+      <label for="voice">Voice name</label>
+      <select id="voice">
+        <option>Kore</option><option>Aoede</option><option>Leda</option><option>Zephyr</option>
+        <option>Puck</option><option>Charon</option><option>Fenrir</option><option>Orus</option>
+      </select>
+
+      <label><input type="checkbox" id="slow" style="width:auto;margin-right:6px">Speak slowly</label>
+      <label><input type="checkbox" id="autoJa" style="width:auto;margin-right:6px">Always show Japanese translation</label>
+
+      <div class="row" style="margin-top:16px">
+        <button class="btn alt" id="saveSettings">Save</button>
+        <button class="btn ghost" id="testVoice">Test voice</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="dock" id="dock" style="display:none">
+  <div class="dock-inner">
+    <button class="mic" id="mic" aria-label="Talk">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      <span id="micLabel">TALK</span>
+    </button>
+    <div class="typebox">
+      <input id="typed" placeholder="or type here…" autocomplete="off">
+      <button class="btn" id="sendTyped">Send</button>
+    </div>
+    <button class="hint-btn" id="hintBtn" title="What could I say?">?</button>
+  </div>
+</div>
+
+<script>
+/* ---------- storage ---------- */
+const store={
+  get(k,d){try{const v=localStorage.getItem('sol_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('sol_'+k,JSON.stringify(v))}catch(e){}}
+};
+const DEFAULT_PHRASES=`I'm looking forward to it. | 楽しみにしています
+Would you mind if I ...? | 〜してもいいですか（丁寧）
+It depends on ... | 〜次第です
+I'm not really into ... | 〜はあまり好きじゃない
+That makes sense. | なるほど、納得です
+I was wondering if ... | 〜していただけないかと思って
+Can you recommend a good book? | おすすめの本はありますか？`;
+const DEFAULT_SETTINGS={apiKey:'',level:'intermediate (CEFR B1)',chatModel:'gemini-3.8-flash',ttsMode:'gemini',
+  ttsModel:'gemini-3.8-flash-lite-tts',voice:'Kore',slow:false,autoJa:false};
+
+let settings=Object.assign({},DEFAULT_SETTINGS,store.get('settings',{}));
+let phrasesText=store.get('phrases',DEFAULT_PHRASES);
+let notebook=store.get('notebook',[]);
+let chapterCount=store.get('chapters',0);
+let cur=null; // {phrase,note,history:[{role,text}]}
+let busy=false;
+
+const $=s=>document.querySelector(s);
+const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e};
+function toast(msg,ms=3200){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),ms)}
+function setStatus(s){$('#status').textContent=s||''}
+
+/* ---------- string lights ---------- */
+function drawLights(){
+  const svg=$('#lights');const w=window.innerWidth;svg.setAttribute('viewBox',`0 0 ${w} 130`);svg.innerHTML='';
+  const ns='http://www.w3.org/2000/svg';
+  const curves=[`M-10 10 Q ${w*0.25} 95 ${w*0.5} 18`,`M${w*0.5} 18 Q ${w*0.75} 95 ${w+10} 8`,`M-10 40 Q ${w*0.5} 125 ${w+10} 36`];
+  curves.forEach((d,ci)=>{
+    const p=document.createElementNS(ns,'path');p.setAttribute('d',d);p.setAttribute('fill','none');
+    p.setAttribute('stroke','rgba(20,12,40,.55)');p.setAttribute('stroke-width','1.2');svg.appendChild(p);
+    const L=p.getTotalLength();const n=Math.max(8,Math.round(L/(ci===2?34:26)));
+    for(let i=1;i<n;i++){const pt=p.getPointAtLength(L*i/n);const c=document.createElementNS(ns,'circle');
+      c.setAttribute('cx',pt.x);c.setAttribute('cy',pt.y+3);c.setAttribute('r',ci===2?2.2:2.8);
+      c.style.animation=`twinkle ${2+Math.random()*2.5}s ${Math.random()*2}s infinite`;svg.appendChild(c);}
+  });
+}
+drawLights();addEventListener('resize',drawLights);
+
+/* ---------- tabs ---------- */
+function showTab(id){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===id));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===id));
+  $('#dock').style.display=(id==='talk'&&cur)?'block':'none';
+  if(id==='notebook')renderNotebook();
+  scrollTo({top:0});
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+/* ---------- shelf ---------- */
+function parsePhrases(){
+  return phrasesText.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
+    const i=l.indexOf('|');return i<0?{phrase:l,note:''}:{phrase:l.slice(0,i).trim(),note:l.slice(i+1).trim()};
+  });
+}
+function renderShelf(){
+  const box=$('#books');box.innerHTML='';
+  parsePhrases().forEach((p,i)=>{
+    const b=el('button','book c'+(i%6));
+    const top=el('div');top.appendChild(el('div','en',p.phrase));if(p.note)top.appendChild(el('div','note',p.note));
+    b.appendChild(top);b.appendChild(el('div','tag','a novel'));
+    b.onclick=()=>startChapter(p);box.appendChild(b);
+  });
+  $('#phrases').value=phrasesText;
+}
+$('#editToggle').onclick=()=>{const e=$('#editor');e.style.display=e.style.display==='none'?'block':'none'};
+$('#savePhrases').onclick=()=>{phrasesText=$('#phrases').value;store.set('phrases',phrasesText);renderShelf();toast('フレーズを保存しました')};
+$('#randomBtn').onclick=()=>{const ps=parsePhrases();if(ps.length)startChapter(ps[Math.floor(Math.random()*ps.length)])};
+
+/* ---------- settings ---------- */
+function loadSettingsForm(){
+  for(const k of ['apiKey','level','chatModel','ttsMode','ttsModel','voice'])$('#'+k).value=settings[k];
+  $('#slow').checked=settings.slow;$('#autoJa').checked=settings.autoJa;
+}
+$('#saveSettings').onclick=()=>{
+  for(const k of ['apiKey','level','chatModel','ttsMode','ttsModel','voice'])settings[k]=$('#'+k).value.trim();
+  settings.chatModel=settings.chatModel||DEFAULT_SETTINGS.chatModel;settings.ttsModel=settings.ttsModel||DEFAULT_SETTINGS.ttsModel;
+  settings.slow=$('#slow').checked;settings.autoJa=$('#autoJa').checked;store.set('settings',settings);toast('設定を保存しました');
+};
+$('#testVoice').onclick=()=>{unlockAudio();$('#saveSettings').click();speak("Hi! I'm Margo. Shall we chat about books tonight?")};
+
+/* ---------- Gemini ---------- */
+async function gemini(model,body){
+  if(!settings.apiKey){showTab('settings');throw new Error('Settings で Gemini API key を入力してください');}
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{
+    method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':settings.apiKey},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error?.message||('HTTP '+r.status));
+  return j;
+}
+function textOf(j){return (j.candidates?.[0]?.content?.parts||[]).filter(p=>p.text&&!p.thought).map(p=>p.text).join('')}
+function parseJSON(s){try{return JSON.parse(s)}catch(e){const m=s.match(/\{[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw new Error('AIの返答を読み取れませんでした')}}
+
+function systemPrompt(){
+  return `You are "Margo", a warm, witty conversation partner who runs a cozy little bookshop café. You are helping a Japanese learner practice spoken English.
+Learner level: ${settings.level}.
+Today's target phrase: "${cur.phrase}"${cur.note?` (learner's note: ${cur.note})`:''}.
+
+CONVERSATION
+- Chat naturally about everyday topics connected to the target phrase. Set up small situations where the learner would naturally want to use it.
+- "reply": spoken style, 1-3 short sentences, then exactly ONE question. Match the learner's level. Never put grammar lessons inside "reply".
+- "reply_ja": a natural Japanese translation of "reply".
+
+CORRECTION (for every learner turn)
+- "transcript": write EXACTLY what the learner said, word for word, keeping every grammar mistake, wrong word and missing article. Do NOT fix anything here. Leave out fillers like "uh/um". Write [inaudible] for parts you cannot hear.
+- Check grammar, word choice, prepositions, articles, tense, word order and unnatural phrasing. Ignore punctuation, capitalization and accent.
+- If there are mistakes: has_mistake=true, "corrected" = the full sentence with minimal edits, "points" = one item per fix (wrong part, right part, one short sentence in Japanese explaining why).
+- If there are no mistakes: has_mistake=false, "corrected" = transcript, "points" = [], and if a native speaker would say it more naturally, give that in "natural_version" (otherwise empty string).
+- If the learner used Japanese, put a natural English version in "corrected", has_mistake=true, and explain in "points".
+- "used_target_phrase": true if the learner used the target phrase (or a correct variation of it).`;
+}
+const S=(t,extra)=>Object.assign({type:t},extra||{});
+const TURN_SCHEMA=S('OBJECT',{properties:{
+  transcript:S('STRING'),has_mistake:S('BOOLEAN'),corrected:S('STRING'),
+  points:S('ARRAY',{items:S('OBJECT',{properties:{wrong:S('STRING'),right:S('STRING'),why_ja:S('STRING')},required:['wrong','right','why_ja']})}),
+  natural_version:S('STRING'),used_target_phrase:S('BOOLEAN'),reply:S('STRING'),reply_ja:S('STRING')},
+  required:['transcript','has_mistake','corrected','points','natural_version','used_target_phrase','reply','reply_ja']});
+const OPEN_SCHEMA=S('OBJECT',{properties:{reply:S('STRING'),reply_ja:S('STRING')},required:['reply','reply_ja']});
+const HINT_SCHEMA=S('OBJECT',{properties:{hints:S('ARRAY',{items:S('OBJECT',{properties:{en:S('STRING'),ja:S('STRING')},required:['en','ja']})})},required:['hints']});
+
+function historyContents(){return cur.history.map(h=>({role:h.role,parts:[{text:h.text}]}))}
+async function ask(extraParts,schema){
+  const contents=historyContents();contents.push({role:'user',parts:extraParts});
+  const j=await gemini(settings.chatModel,{systemInstruction:{parts:[{text:systemPrompt()}]},contents,
+    generationConfig:{responseMimeType:'application/json',responseSchema:schema,temperature:0.8}});
+  return parseJSON(textOf(j));
+}
+
+/* ---------- chapter flow ---------- */
+async function startChapter(p){
+  unlockAudio();
+  cur={phrase:p.phrase,note:p.note,history:[]};
+  chapterCount++;store.set('chapters',chapterCount);
+  $('#chapter').style.display='block';$('#talkEmpty').style.display='none';
+  $('#chapNum').textContent='Chapter '+chapterCount;$('#chapTitle').textContent=p.phrase;$('#chapNote').textContent=p.note||'';
+  $('#log').innerHTML='';$('#hints').innerHTML='';
+  showTab('talk');
+  await run(async()=>{
+    setStatus('Margo is turning the page…');
+    const opener='(Start the conversation now: greet me warmly and ask a first question that leads toward the target phrase.)';
+    const r=await ask([{text:opener}],OPEN_SCHEMA);
+    cur.history.push({role:'user',text:opener},{role:'model',text:r.reply});
+    addAI(r.reply,r.reply_ja);
+  });
+}
+
+async function run(fn){
+  if(busy)return;busy=true;setMic('busy');
+  try{await fn()}catch(e){console.error(e);toast(e.message||String(e),5000)}
+  finally{busy=false;setMic('idle');setStatus('')}
+}
+
+async function learnerTurn(parts,typedText){
+  $('#hints').innerHTML='';
+  const placeholder=addMe(typedText||'…');
+  setStatus('Margo is listening carefully…');
+  const r=await ask(parts,TURN_SCHEMA);
+  const said=typedText||r.transcript||'(no speech)';
+  placeholder.querySelector('.txt').textContent=said;
+  cur.history.push({role:'user',text:said},{role:'model',text:r.reply});
+  addCorrection(r,said);
+  addAI(r.reply,r.reply_ja);
+}
+
+/* ---------- rendering ---------- */
+function scrollDown(){requestAnimationFrame(()=>scrollTo({top:document.body.scrollHeight,behavior:'smooth'}))}
+function addAI(text,ja){
+  const m=el('div','msg ai'+(settings.autoJa?' showja':''));
+  m.appendChild(el('span','who','Margo'));m.appendChild(el('div','txt',text));
+  const jp=el('div','jp',ja||'');m.appendChild(jp);
+  const tools=el('div','tools');
+  const play=el('button','chip','▶ もう一度');play.onclick=()=>speak(text,m);
+  const tr=el('button','chip','和訳');tr.onclick=()=>m.classList.toggle('showja');
+  tools.append(play,tr);m.appendChild(tools);
+  $('#log').appendChild(m);scrollDown();speak(text,m);
+}
+function addMe(text){
+  const m=el('div','msg me');m.appendChild(el('span','who','You'));m.appendChild(el('div','txt',text));
+  $('#log').appendChild(m);scrollDown();return m;
+}
+function addCorrection(r,said){
+  const pts=Array.isArray(r.points)?r.points:[];
+  const good=!r.has_mistake||!pts.length;
+  const c=el('div','note-card'+(good?' good':''));
+  if(good){
+    c.appendChild(el('div','head','Perfect — no corrections ✓'));
+    if(r.natural_version&&r.natural_version.trim()&&r.natural_version.trim()!==said.trim()){
+      c.appendChild(el('div','pt ja','もっと自然に言うなら:'));
+      const f=el('div','fixed',r.natural_version);c.appendChild(f);
+      const b=el('button','chip','▶ 聞く');b.onclick=()=>speak(r.natural_version);c.appendChild(b);
+    }
+  }else{
+    c.appendChild(el('div','head','A little margin note'));
+    c.appendChild(el('div','fixed',r.corrected));
+    pts.forEach(p=>{const d=el('div','pt');const w=el('span','w',p.wrong);const ar=document.createTextNode(' → ');const rr=el('span','r',p.right);
+      d.append(w,ar,rr);d.appendChild(el('span','why',p.why_ja));c.appendChild(d);});
+    const b=el('button','chip','▶ 正しい文を聞く');b.onclick=()=>speak(r.corrected);c.appendChild(b);
+  }
+  if(r.used_target_phrase)c.appendChild(el('span','badge','★ Target phrase used!'));
+  $('#log').appendChild(c);scrollDown();
+  if(!good||(r.natural_version&&r.natural_version.trim())){
+    notebook.unshift({at:new Date().toISOString(),phrase:cur.phrase,said,corrected:good?'':r.corrected,points:pts,natural:r.natural_version||''});
+    notebook=notebook.slice(0,500);store.set('notebook',notebook);
+  }
+}
+function renderNotebook(){
+  const box=$('#nbList');box.innerHTML='';
+  if(!notebook.length){box.appendChild(el('div','muted ja','まだ添削メモはありません。会話すると、ここに貯まっていきます。'));return;}
+  notebook.forEach(n=>{
+    const it=el('div','nb-item');
+    it.appendChild(el('div','nb-date',new Date(n.at).toLocaleDateString('ja-JP')+' · '+n.phrase));
+    const s=el('div','pt');s.appendChild(el('span','w',n.said));it.appendChild(s);
+    if(n.corrected)it.appendChild(el('div','fixed',n.corrected));
+    (n.points||[]).forEach(p=>{const d=el('div','pt');d.append(el('span','r',p.wrong+' → '+p.right));d.appendChild(el('span','why',p.why_ja));it.appendChild(d)});
+    if(n.natural){const d=el('div','pt ja','自然な言い方: ');d.appendChild(el('span','r',n.natural));it.appendChild(d)}
+    const b=el('button','chip','▶');b.onclick=()=>speak(n.corrected||n.natural);it.appendChild(b);
+    box.appendChild(it);
+  });
+}
+$('#clearNb').onclick=()=>{if(confirm('Notebook を空にしますか？')){notebook=[];store.set('notebook',notebook);renderNotebook()}};
+
+/* ---------- hints ---------- */
+$('#hintBtn').onclick=()=>run(async()=>{
+  setStatus('Looking for ideas…');
+  const contents=historyContents();
+  contents.push({role:'user',parts:[{text:'(I am stuck. Give 3 short things I could say next as my reply to your last question, at my level. At least one should use the target phrase. Include Japanese meanings.)'}]});
+  const j=await gemini(settings.chatModel,{systemInstruction:{parts:[{text:systemPrompt()}]},contents,
+    generationConfig:{responseMimeType:'application/json',responseSchema:HINT_SCHEMA}});
+  const r=parseJSON(textOf(j));const box=$('#hints');box.innerHTML='';
+  (r.hints||[]).forEach(h=>{const d=el('div','hint');d.appendChild(el('div','en',h.en));d.appendChild(el('div','jp',h.ja));d.onclick=()=>speak(h.en);box.appendChild(d)});
+  scrollDown();
+});
+
+/* ---------- typed input ---------- */
+function sendTyped(){
+  const v=$('#typed').value.trim();if(!v||busy)return;$('#typed').value='';
+  run(()=>learnerTurn([{text:`Learner typed (treat it as what they said; transcript must be exactly this): ${v}`}],v));
+}
+$('#sendTyped').onclick=sendTyped;
+$('#typed').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)sendTyped()});
+
+/* ---------- recording ---------- */
+let rec=null,chunks=[],micStream=null;
+function setMic(state){
+  const m=$('#mic');m.classList.toggle('rec',state==='rec');m.classList.toggle('busy',state==='busy');
+  $('#micLabel').textContent=state==='rec'?'SEND':state==='busy'?'…':'TALK';
+}
+$('#mic').onclick=async()=>{
+  unlockAudio();
+  if(rec&&rec.state==='recording'){
+    const blob=await stopRec();
+    run(async()=>{
+      setStatus('Preparing your voice…');
+      const b64=await blobToWav16kBase64(blob);
+      await learnerTurn([{text:'Learner turn (audio attached). Transcribe it exactly as spoken, then respond.'},{inlineData:{mimeType:'audio/wav',data:b64}}]);
+    });
+    return;
+  }
+  if(busy)return;
+  stopSpeaking();
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+  }catch(e){toast('マイクが使えません。localhost で開いているか、マイクの許可を確認してください',6000);return;}
+  chunks=[];rec=new MediaRecorder(micStream);
+  rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  rec.start();setMic('rec');setStatus('Listening… tap again when you finish');
+};
+function stopRec(){
+  return new Promise(res=>{rec.onstop=()=>{micStream.getTracks().forEach(t=>t.stop());res(new Blob(chunks,{type:rec.mimeType||'audio/webm'}));rec=null};rec.stop();});
+}
+async function blobToWav16kBase64(blob){
+  const buf=await blob.arrayBuffer();
+  const ctx=getCtx();
+  const decoded=await new Promise((ok,ng)=>{const p=ctx.decodeAudioData(buf,ok,ng);if(p&&p.then)p.then(ok,ng)});
+  if(decoded.duration<0.3)throw new Error('録音が短すぎます。もう一度どうぞ');
+  const rate=16000,len=Math.ceil(decoded.duration*rate);
+  const off=new OfflineAudioContext(1,len,rate);
+  const src=off.createBufferSource();src.buffer=decoded;src.connect(off.destination);src.start();
+  const out=await off.startRendering();
+  return bytesToB64(encodeWav(out.getChannelData(0),rate));
+}
+function encodeWav(f32,rate){
+  const n=f32.length,buf=new ArrayBuffer(44+n*2),v=new DataView(buf);
+  const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++){const s=Math.max(-1,Math.min(1,f32[i]));v.setInt16(44+i*2,s<0?s*0x8000:s*0x7fff,true)}
+  return new Uint8Array(buf);
+}
+function bytesToB64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s)}
+function b64ToBytes(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u}
+
+/* ---------- speech output ---------- */
+let audioCtx=null,curSource=null,curEl=null;
+const ttsCache=new Map();
+function getCtx(){if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;audioCtx=new AC()}return audioCtx}
+function unlockAudio(){try{const c=getCtx();if(c.state==='suspended')c.resume()}catch(e){}}
+function stopSpeaking(){
+  try{curSource&&curSource.stop()}catch(e){}curSource=null;
+  try{speechSynthesis.cancel()}catch(e){}
+  if(curEl){curEl.classList.remove('speaking');curEl=null}
+}
+async function speak(text,bubble){
+  if(!text||settings.ttsMode==='off')return;
+  stopSpeaking();
+  if(bubble){curEl=bubble;bubble.classList.add('speaking')}
+  const done=()=>{if(bubble)bubble.classList.remove('speaking')};
+  if(settings.ttsMode==='gemini'){
+    try{await speakGemini(text,done);return}catch(e){console.warn('Gemini TTS failed, using browser voice',e);toast('Gemini音声が使えなかったのでブラウザ音声で再生します')}
+  }
+  speakBrowser(text,done);
+}
+async function speakGemini(text,done){
+  const key=settings.voice+'|'+settings.slow+'|'+text;
+  let audio=ttsCache.get(key);
+  if(!audio){
+    const style=settings.slow?'Say this slowly and clearly, in a warm, friendly voice':'Say this in a warm, friendly, natural voice';
+    const j=await gemini(settings.ttsModel,{contents:[{parts:[{text:`${style}: ${text}`}]}],
+      generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:settings.voice}}}}});
+    const part=(j.candidates?.[0]?.content?.parts||[]).find(p=>p.inlineData);
+    if(!part)throw new Error('no audio returned');
+    audio={mime:part.inlineData.mimeType||'',bytes:b64ToBytes(part.inlineData.data)};
+    ttsCache.set(key,audio);
+  }
+  const ctx=getCtx();let buffer;
+  if(/wav|mpeg|mp3|ogg|aac|flac/i.test(audio.mime)){
+    buffer=await ctx.decodeAudioData(audio.bytes.buffer.slice(0));
+  }else{ // raw 16-bit PCM (audio/L16;rate=24000)
+    const rate=+((audio.mime.match(/rate=(\d+)/)||[])[1]||24000);
+    const pcm=new Int16Array(audio.bytes.buffer,audio.bytes.byteOffset,Math.floor(audio.bytes.byteLength/2));
+    buffer=ctx.createBuffer(1,pcm.length,rate);const ch=buffer.getChannelData(0);
+    for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
+  }
+  const src=ctx.createBufferSource();src.buffer=buffer;src.connect(ctx.destination);
+  src.onended=()=>{if(curSource===src)curSource=null;done()};
+  curSource=src;src.start();
+}
+function speakBrowser(text,done){
+  try{
+    const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=settings.slow?0.82:0.98;
+    const vs=speechSynthesis.getVoices().filter(v=>/^en(-|_)(US|GB)/i.test(v.lang));
+    const pick=vs.find(v=>/Samantha|Ava|Google US English|Karen|Serena/i.test(v.name))||vs[0];if(pick)u.voice=pick;
+    u.onend=done;u.onerror=done;speechSynthesis.speak(u);
+  }catch(e){done()}
+}
+
+/* ---------- init ---------- */
+loadSettingsForm();renderShelf();
+if(!settings.apiKey)setTimeout(()=>toast('まず Settings で Gemini API key を入力してください',5000),600);
+if(location.protocol==='file:')setTimeout(()=>toast('マイクを使うには start.command から開いてください（localhost）',6000),2500);
+</script>
+</body>
+</html>
