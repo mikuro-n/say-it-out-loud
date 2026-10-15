@@ -6,6 +6,13 @@
 <meta name="theme-color" content="#241b4d">
 <title>Little Talks</title>
 <meta name="apple-mobile-web-app-title" content="Little Talks">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Serif+Display:ital@0;1&family=Dancing+Script:wght@600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
@@ -419,6 +426,15 @@ body.resizing .ask{transition:none}
         <button class="btn alt" id="saveSettings">Save</button>
         <button class="btn ghost" id="testVoice">Test voice</button>
       </div>
+
+      <label>Backup（書き出し・読み込み）</label>
+      <div class="row">
+        <button class="btn alt" type="button" id="exportData">書き出す</button>
+        <button class="btn ghost" type="button" id="importData">読み込む</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+      <label class="ja" style="text-transform:none;letter-spacing:0;font-family:var(--ja);font-size:13px;color:var(--ink)"><input type="checkbox" id="exportKey" style="width:auto;margin-right:6px">API キーも含める</label>
+      <div class="muted ja" style="margin-top:6px">Notebook・About me・フレーズ・設定・Ask Margo の履歴を1つのファイルにまとめます。iPhone では共有メニューから「"ファイル"に保存」で iCloud Drive などに保存できます。読み込むと、この端末の今のデータは置き換わります。</div>
     </div>
   </section>
 </div>
@@ -622,6 +638,36 @@ $('#quickRegister').onchange=e=>{
   settings.register=e.target.value;$('#register').value=settings.register;store.set('settings',settings);
   toast(`話し方: ${REGISTERS[settings.register].ja}（次の返答から反映）`);
 };
+/* ---------- backup ---------- */
+const BACKUP_KEYS=['settings','phrases','notebook','profile','ask','askSize','chapters'];
+$('#exportData').onclick=async()=>{
+  const data={};
+  for(const k of BACKUP_KEYS){const v=store.get(k,undefined);if(v!==undefined)data[k]=v}
+  if(data.settings&&!$('#exportKey').checked)data.settings=Object.assign({},data.settings,{apiKey:''});
+  const name=`little-talks-backup-${new Date().toISOString().slice(0,10)}.json`;
+  const file=new File([JSON.stringify({app:'little-talks',version:1,exportedAt:new Date().toISOString(),data},null,2)],name,{type:'application/json'});
+  // On phones the share sheet is the reliable way to save into Files / iCloud Drive.
+  if(navigator.canShare&&matchMedia('(pointer:coarse)').matches&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:name});return}catch(e){if(e.name==='AbortError')return}
+  }
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+  toast('バックアップを書き出しました');
+};
+$('#importData').onclick=()=>$('#importFile').click();
+$('#importFile').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  let json;
+  try{json=JSON.parse(await f.text())}catch(err){toast('ファイルを読み取れませんでした',5000);return}
+  if(json?.app!=='little-talks'||typeof json.data!=='object'){toast('Little Talks のバックアップファイルではないようです',5000);return}
+  if(!confirm('バックアップを読み込みます。この端末の今のデータは置き換わります。よろしいですか？'))return;
+  const d=json.data;
+  // Keep this device's API key when the backup doesn't carry one.
+  if(d.settings&&!d.settings.apiKey&&settings.apiKey)d.settings.apiKey=settings.apiKey;
+  for(const k of BACKUP_KEYS)if(k in d)store.set(k,d[k]);
+  toast('読み込みました。再読み込みします…');setTimeout(()=>location.reload(),800);
+};
+
 $('#testVoice').onclick=()=>{unlockAudio();$('#saveSettings').click();speak("Hi! I'm Margo. Shall we chat about books tonight?")};
 
 /* ---------- Gemini ---------- */

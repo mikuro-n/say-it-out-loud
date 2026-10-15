@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#221a4a"/>
+      <stop offset=".38" stop-color="#46337a"/>
+      <stop offset=".75" stop-color="#a9558c"/>
+      <stop offset="1" stop-color="#ef8f68"/>
+    </linearGradient>
+    <mask id="crescent"><rect width="512" height="512" fill="#fff"/><circle cx="432" cy="196" r="40" fill="#000"/></mask>
+  </defs>
+  <rect width="512" height="512" fill="url(#sky)"/>
+  <path d="M-10 80 Q 256 220 522 80" fill="none" stroke="#140c28" stroke-opacity=".55" stroke-width="3"/>
+  <g fill="#f9dc7a">
+    <circle cx="43" cy="109" r="8"/>
+    <circle cx="96" cy="129" r="8"/>
+    <circle cx="150" cy="143" r="8"/>
+    <circle cx="203" cy="151" r="8"/>
+    <circle cx="256" cy="154" r="8"/>
+    <circle cx="309" cy="151" r="8"/>
+    <circle cx="362" cy="143" r="8"/>
+    <circle cx="416" cy="129" r="8"/>
+    <circle cx="469" cy="109" r="8"/>
+  </g>
+  <circle cx="408" cy="218" r="44" fill="#fff2c4" mask="url(#crescent)"/>
+  <g fill="#fff" fill-opacity=".7">
+    <circle cx="70" cy="230" r="3"/><circle cx="470" cy="300" r="2.5"/><circle cx="120" cy="330" r="2"/>
+  </g>
+  <g transform="translate(66 144) scale(5.6)">
+    <ellipse cx="34" cy="61" rx="16" ry="2" fill="#1b1430" opacity=".35"/>
+    <path fill="none" stroke="#1b1430" stroke-width="3.6" stroke-linecap="round" d="M24 59C13 59 9 50 10 41c.6-5 3-8 5.5-7.5"/>
+    <path fill="#1b1430" d="M23.5 18 24 5.5l7 7.5h6l7-7.5.5 12.5c1.5 2 2 4 2 6 0 3.5-1.6 6.3-4 8 4.5 3.5 7.5 10.5 7.5 17.5 0 6.5-3.5 10-9 10H28c-5.5 0-9-3.5-9-10 0-7 3-14 7.5-17.5-2.4-1.7-4-4.5-4-8 0-2 .5-4 1-6z"/>
+    <g fill="#e8457f"><path d="M11.5 41.5 5 38.5v6.5zM12.5 41.5l6.5-3v6.5z"/><circle cx="12" cy="41.6" r="1.9"/></g>
+  </g>
+</svg>
