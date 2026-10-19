@@ -381,36 +381,36 @@ body.resizing .ask{transition:none}
       <div class="page">
         <h2>Quick Drill</h2>
         <div class="script">see it in Japanese, say it in English</div>
-        <div class="muted ja" style="margin-top:4px">瞬間英作文。場面を選ぶと、ネイティブが実際に使う文が日本語で10問出ます。英語で声に出してから、答えを見て次へ。</div>
+        <div class="muted" style="margin-top:4px">Pick a scene. You'll get 10 lines in Japanese that natives really say there. Say each one out loud in English, then check the answer.</div>
         <div class="qk-grid" id="qkGrid"></div>
-        <label for="qkCustom">自由に場面を入力</label>
+        <label for="qkCustom">Or make your own scene</label>
         <div class="row" style="flex-wrap:nowrap">
-          <input id="qkCustom" placeholder="例: 美容院、病院、ジムの受付" style="flex:1">
-          <button class="btn" id="qkCustomGo" type="button">始める</button>
+          <input id="qkCustom" placeholder="e.g. hair salon, doctor's office, gym" style="flex:1">
+          <button class="btn" id="qkCustomGo" type="button">Start</button>
         </div>
       </div>
     </div>
     <div id="qk-play" style="display:none">
       <div class="qk-top">
-        <button class="qk-pill" id="qkBack" type="button">← 場面</button>
+        <button class="qk-pill" id="qkBack" type="button">← Scenes</button>
         <span class="qk-pill ja" id="qkLabel"></span>
         <span class="qk-pill" id="qkCount"></span>
       </div>
       <div class="qk-dots" id="qkDots"></div>
       <div class="qk-card" id="qkCard"></div>
       <div class="qk-nav">
-        <button class="btn ghost qk-prev" id="qkPrev" type="button">← 前へ</button>
-        <button class="btn qk-main" id="qkMain" type="button">答えを見る</button>
+        <button class="btn ghost qk-prev" id="qkPrev" type="button">← Back</button>
+        <button class="btn qk-main" id="qkMain" type="button">Show answer</button>
       </div>
     </div>
     <div id="qk-done" style="display:none">
       <div class="page">
-        <h2 class="ja" id="qkDoneTitle" style="text-transform:none"></h2>
+        <h2 id="qkDoneTitle" style="text-transform:none"></h2>
         <div class="script">10 little lines, said out loud</div>
         <div id="qkList"></div>
         <div class="row" style="margin-top:14px">
-          <button class="btn" id="qkAgain" type="button">同じ場面でもう10問</button>
-          <button class="btn ghost" id="qkMenu" type="button">場面を選ぶ</button>
+          <button class="btn" id="qkAgain" type="button">10 more here</button>
+          <button class="btn ghost" id="qkMenu" type="button">Pick a scene</button>
         </div>
       </div>
     </div>
@@ -545,7 +545,7 @@ body.resizing .ask{transition:none}
 
 <button class="ask-tab" id="askTab" aria-label="AIに質問" aria-expanded="false">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
-  <span class="ja">質問</span>
+  <span class="ja" id="askTabLabel">質問</span>
 </button>
 <aside class="ask" id="ask" aria-label="AIに質問" aria-hidden="true">
   <div class="ask-grip-x" id="askGripX" title="ドラッグで幅を変更" aria-hidden="true"></div>
@@ -1122,7 +1122,7 @@ $('#askForm').onsubmit=async e=>{
 };
 $('#askText').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)&&!e.isComposing)$('#askForm').requestSubmit()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')setAskOpen(false)});
-function askChip(text){const b=el('button','chip askit','💬 質問');b.onclick=()=>askAbout(text);return b}
+function askChip(text,label='💬 質問'){const b=el('button','chip askit',label);b.onclick=()=>askAbout(text);return b}
 
 /* ---------- typed input ---------- */
 function sendTyped(){
@@ -1258,21 +1258,21 @@ function speakBrowser(text,done){
 const cloud=(x,y,s=1,c='#fff')=>`<g transform="translate(${x} ${y}) scale(${s})" fill="${c}" opacity=".9"><ellipse cx="0" cy="0" rx="26" ry="14"/><ellipse cx="22" cy="-8" rx="20" ry="16"/><ellipse cx="44" cy="2" rx="22" ry="12"/></g>`;
 const sparkle=(x,y,s=1,c='#fff')=>`<path transform="translate(${x} ${y}) scale(${s})" d="M0-9C1-2 2-1 9 0 2 1 1 2 0 9-1 2-2 1-9 0-2-1-1-2 0-9z" fill="${c}"/>`;
 const SCENES={
-  airport:{ja:'空港',icon:'✈️',sky:['#bfe3f2','#fde9d9'],
+  airport:{name:'Airport',icon:'✈️',sky:['#bfe3f2','#fde9d9'],
     en:'at the airport: check-in counter, baggage, security, immigration, finding the gate, delays. Polite with staff.',
     art:`${cloud(40,60,1)}${cloud(300,40,.8)}${cloud(250,150,.6)}
       <rect y="250" width="400" height="50" fill="#e8dcc8"/><rect y="268" width="400" height="8" fill="#d3c4ad"/>
       <g fill="#fff"><rect x="40" y="270" width="30" height="4"/><rect x="110" y="270" width="30" height="4"/><rect x="180" y="270" width="30" height="4"/><rect x="250" y="270" width="30" height="4"/><rect x="320" y="270" width="30" height="4"/></g>
       <rect x="62" y="150" width="22" height="100" fill="#a9bdd0"/><path d="M50 150h46l-6-26H56z" fill="#8aa3bb"/><rect x="58" y="130" width="30" height="14" fill="#cfe6f5"/>
       <g transform="translate(240 105) rotate(-12)"><path d="M-10 -2 L-36 -40 L-20 -40 L20 -2Z" fill="#dfe8f2"/><ellipse rx="74" ry="14" fill="#fff"/><path d="M-10 2 L-40 46 L-22 46 L22 2Z" fill="#e7eef6"/><path d="M-64 -4 L-80 -32 L-67 -32 L-50 -6Z" fill="#f2879e"/><path d="M60 -6a14 9 0 0 1 12 6h-14z" fill="#9fc3e6"/><g fill="#9fc3e6"><circle cx="-36" cy="-3" r="2.6"/><circle cx="-24" cy="-3" r="2.6"/><circle cx="-12" cy="-3" r="2.6"/><circle cx="0" cy="-3" r="2.6"/><circle cx="12" cy="-3" r="2.6"/><circle cx="24" cy="-3" r="2.6"/><circle cx="36" cy="-3" r="2.6"/></g><rect x="-60" y="3" width="120" height="2.5" fill="#f2879e"/></g>`},
-  taxi:{ja:'タクシー',icon:'🚕',sky:['#ffe7a8','#ffd1b8'],
+  taxi:{name:'Taxi',icon:'🚕',sky:['#ffe7a8','#ffd1b8'],
     en:'taking a taxi or rideshare: giving the address, asking how long it takes and the fare, asking to stop, paying and tipping, small talk with the driver.',
     art:`<g fill="#f6b8a0"><rect x="10" y="120" width="60" height="130"/><rect x="150" y="90" width="50" height="160"/><rect x="300" y="110" width="70" height="140"/></g>
       <g fill="#efa08a"><rect x="70" y="150" width="70" height="100"/><rect x="200" y="140" width="90" height="110"/><rect x="365" y="160" width="40" height="90"/></g>
       <g fill="#fff3d6" opacity=".8"><rect x="22" y="135" width="10" height="12"/><rect x="45" y="135" width="10" height="12"/><rect x="22" y="160" width="10" height="12"/><rect x="160" y="105" width="10" height="12"/><rect x="180" y="105" width="10" height="12"/><rect x="160" y="130" width="10" height="12"/><rect x="315" y="125" width="10" height="12"/><rect x="340" y="125" width="10" height="12"/><rect x="315" y="150" width="10" height="12"/></g>
       <rect y="245" width="400" height="55" fill="#8a7f99"/><g fill="#fff3d6"><rect x="20" y="270" width="40" height="5"/><rect x="120" y="270" width="40" height="5"/><rect x="220" y="270" width="40" height="5"/><rect x="320" y="270" width="40" height="5"/></g>
       <g transform="translate(120 195)"><path d="M30 0h80l26 24H6z" fill="#f9cc3f"/><path d="M38 5h30v17H22zM74 5h28l18 17H74z" fill="#cfe6f5"/><rect x="0" y="22" width="160" height="34" rx="12" fill="#f9cc3f"/><rect x="0" y="36" width="160" height="6" fill="#3b3350" opacity=".85"/><rect x="58" y="-12" width="44" height="12" rx="3" fill="#fff"/><text x="80" y="-3" font-size="9" font-family="sans-serif" font-weight="700" text-anchor="middle" fill="#3b3350">TAXI</text><circle cx="34" cy="58" r="13" fill="#3b3350"/><circle cx="126" cy="58" r="13" fill="#3b3350"/><circle cx="34" cy="58" r="5" fill="#d9d2ff"/><circle cx="126" cy="58" r="5" fill="#d9d2ff"/><circle cx="154" cy="30" r="4" fill="#fff3a0"/></g>`},
-  hotel:{ja:'ホテル',icon:'🏨',sky:['#d9d4f5','#fbe3ec'],
+  hotel:{name:'Hotel',icon:'🏨',sky:['#d9d4f5','#fbe3ec'],
     en:'at a hotel: checking in and out, asking for towels or a late checkout, reporting a problem in the room, asking the concierge for help.',
     art:`${cloud(30,50,.8)}${cloud(320,70,.7)}
       <rect x="110" y="60" width="180" height="190" rx="4" fill="#f7efe6"/><rect x="100" y="52" width="200" height="14" rx="4" fill="#c9b8e8"/>
@@ -1281,7 +1281,7 @@ const SCENES={
       <path d="M150 208h100l-8 12H158z" fill="#e8457f"/><g fill="#fff" opacity=".7"><rect x="166" y="208" width="10" height="12"/><rect x="194" y="208" width="10" height="12"/><rect x="222" y="208" width="10" height="12"/></g>
       <rect x="180" y="220" width="40" height="30" fill="#b48a6a"/><rect y="250" width="400" height="50" fill="#e9d9cf"/>
       <g transform="translate(85 222)"><rect x="-10" y="10" width="20" height="18" rx="3" fill="#c4553d"/><circle cx="0" cy="0" r="16" fill="#86d3c7"/></g><g transform="translate(315 222)"><rect x="-10" y="10" width="20" height="18" rx="3" fill="#c4553d"/><circle cx="0" cy="0" r="16" fill="#86d3c7"/></g>`},
-  clothes:{ja:'服の買い物',icon:'👗',sky:['#fde2e4','#fff1e6'],
+  clothes:{name:'Clothes Shopping',icon:'👗',sky:['#fde2e4','#fff1e6'],
     en:'shopping for clothes: asking for another size or color, trying things on, asking how it looks, asking about sales, paying, returns.',
     art:`${sparkle(50,50,1.2)}${sparkle(350,70,1)}${sparkle(320,30,.7)}
       <rect x="70" y="80" width="250" height="6" rx="3" fill="#b9a0c9"/><rect x="74" y="86" width="6" height="164" fill="#b9a0c9"/><rect x="310" y="86" width="6" height="164" fill="#b9a0c9"/><rect x="60" y="248" width="34" height="6" rx="3" fill="#b9a0c9"/><rect x="296" y="248" width="34" height="6" rx="3" fill="#b9a0c9"/>
@@ -1291,28 +1291,28 @@ const SCENES={
       <path d="M250 104h30l14 70h-58z" fill="#f9dc7a"/>
       <rect y="250" width="400" height="50" fill="#f6d9d3"/>
       <g transform="translate(330 200)"><path d="M0 0h50l-4 50H4z" fill="#e8457f"/><path d="M14 0c0-16 22-16 22 0" fill="none" stroke="#a9325e" stroke-width="3"/></g>`},
-  cosmetics:{ja:'化粧品の買い物',icon:'💄',sky:['#ffe0ec','#f6e6ff'],
+  cosmetics:{name:'Cosmetics Shopping',icon:'💄',sky:['#ffe0ec','#f6e6ff'],
     en:'shopping for makeup and skincare: asking about shades, skin type, testers, what is popular, recommendations, gift wrapping.',
     art:`${sparkle(60,60,1.3)}${sparkle(340,50,1.1)}${sparkle(300,120,.7)}${sparkle(90,130,.6)}
       <rect x="40" y="232" width="320" height="10" rx="5" fill="#d8b4d6"/>
       <g transform="translate(110 150)"><rect x="-14" y="30" width="28" height="52" rx="3" fill="#e0b86a"/><rect x="-11" y="10" width="22" height="22" fill="#f0d08a"/><path d="M-9 10V-14l18-10v34z" fill="#e8457f"/></g>
       <g transform="translate(200 170)"><rect x="-8" y="-50" width="16" height="16" rx="3" fill="#b9a0c9"/><rect x="-4" y="-36" width="8" height="8" fill="#d8c9e8"/><rect x="-34" y="-28" width="68" height="90" rx="22" fill="#c9b8f0" opacity=".9"/><rect x="-22" y="0" width="44" height="26" rx="6" fill="#fff" opacity=".7"/></g>
       <g transform="translate(290 205)"><ellipse cx="0" cy="26" rx="36" ry="8" fill="#e6a6c4"/><ellipse cx="0" cy="18" rx="36" ry="10" fill="#f6c1d8"/><circle cx="0" cy="-6" r="30" fill="#fde5ef"/><circle cx="0" cy="-6" r="22" fill="#cfe6f5"/></g>`},
-  cafe:{ja:'カフェ',icon:'☕',sky:['#f3e1cf','#fff4e6'],
+  cafe:{name:'Café',icon:'☕',sky:['#f3e1cf','#fff4e6'],
     en:'ordering at a café: customizing a drink (size, milk, less sugar), asking about food, for here or to go, the Wi-Fi password, finding a seat.',
     art:`<g stroke="#8b6f5c" stroke-width="2"><path d="M100 0v50M300 0v40"/></g><path d="M80 50h40l12 24H68z" fill="#e8457f"/><path d="M280 40h40l12 24h-64z" fill="#2c7b74"/><g fill="#fff3a0" opacity=".9"><circle cx="100" cy="80" r="6"/><circle cx="300" cy="70" r="6"/></g>
       <rect x="40" y="226" width="320" height="10" rx="5" fill="#b48a6a"/><rect y="250" width="400" height="50" fill="#e9d2bc"/>
       <g fill="none" stroke="#c9a88f" stroke-width="4" stroke-linecap="round"><path d="M180 120c-10-14 10-20 0-36M206 120c-10-14 10-20 0-36"/></g>
       <ellipse cx="195" cy="224" rx="62" ry="9" fill="#fffaf2"/><path d="M150 140h90l-10 76c-1 6-6 10-12 10h-46c-6 0-11-4-12-10z" fill="#fffaf2"/><path d="M240 158c26 0 26 40-4 40" fill="none" stroke="#fffaf2" stroke-width="9"/><rect x="152" y="160" width="86" height="12" fill="#e8457f" opacity=".85"/>
       <g transform="translate(300 206)"><path d="M-34 14c4-26 64-26 68 0-10 8-58 8-68 0z" fill="#e7a85a"/><path d="M-14 -4l-4 22M2 -6v24M18 -4l4 22" stroke="#c98a3c" stroke-width="3"/></g>`},
-  diner:{ja:'ダイナー',icon:'🍔',sky:['#ffd6d6','#d8f1f0'],
+  diner:{name:'Diner',icon:'🍔',sky:['#ffd6d6','#d8f1f0'],
     en:'at an American diner: ordering breakfast or a burger, how you want your eggs, sides, refills, splitting the check, tipping.',
     art:`<rect x="110" y="30" width="180" height="56" rx="28" fill="#2c7b74"/><rect x="118" y="38" width="164" height="40" rx="20" fill="none" stroke="#ffd6d6" stroke-width="2"/><text x="200" y="68" font-size="26" font-family="Georgia,serif" font-style="italic" text-anchor="middle" fill="#ffd6d6">Diner</text>
       <g>${Array.from({length:10},(_,i)=>`<rect x="${i*40}" y="250" width="20" height="25" fill="#fff"/><rect x="${i*40+20}" y="250" width="20" height="25" fill="#e8457f"/><rect x="${i*40}" y="275" width="20" height="25" fill="#e8457f"/><rect x="${i*40+20}" y="275" width="20" height="25" fill="#fff"/>`).join('')}</g>
       <rect x="40" y="230" width="320" height="12" rx="6" fill="#c0c7d6"/>
       <g transform="translate(150 168)"><path d="M-44 0c0-36 88-36 88 0z" fill="#e7a85a"/><g fill="#fff3d6"><circle cx="-16" cy="-14" r="2"/><circle cx="4" cy="-20" r="2"/><circle cx="20" cy="-12" r="2"/></g><rect x="-48" y="2" width="96" height="10" rx="5" fill="#86c46b"/><rect x="-46" y="12" width="92" height="8" fill="#f9cc3f"/><rect x="-46" y="20" width="92" height="16" rx="7" fill="#7a4a35"/><path d="M-44 38h88c0 18-88 18-88 0z" fill="#e7a85a"/></g>
       <g transform="translate(270 140)"><path d="M-26 0h52l-10 88h-32z" fill="#fde5ef"/><path d="M-26 0c0-26 52-26 52 0z" fill="#fff"/><circle cx="0" cy="-26" r="7" fill="#e8457f"/><path d="M8 -20l14-40" stroke="#86d3c7" stroke-width="5" stroke-linecap="round"/><rect x="-24" y="30" width="48" height="8" fill="#f2879e"/></g>`},
-  reservation:{ja:'予約',icon:'📅',sky:['#e2ecff','#f7f0ff'],
+  reservation:{name:'Reservations',icon:'📅',sky:['#e2ecff','#f7f0ff'],
     en:'making a reservation by phone or in person (restaurant, salon, tour): date and time, number of people, special requests, changing or cancelling.',
     art:`${sparkle(70,60,1)}${sparkle(330,90,1.2)}${cloud(300,40,.6)}
       <g transform="translate(150 50)"><rect width="100" height="190" rx="18" fill="#4b3a8c"/><rect x="8" y="16" width="84" height="150" rx="8" fill="#fffaf2"/><rect x="38" y="174" width="24" height="5" rx="2.5" fill="#c9b8f0"/>
@@ -1320,14 +1320,14 @@ const SCENES={
         <rect x="16" y="124" width="68" height="28" rx="14" fill="#2c7b74"/><path d="M38 138l7 7 14-14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
       <g transform="translate(320 200)"><circle r="34" fill="#fffaf2" stroke="#c9b8f0" stroke-width="6"/><path d="M0 0v-20M0 0l14 8" stroke="#4b3a8c" stroke-width="4" stroke-linecap="round"/></g>
       <rect y="262" width="400" height="38" fill="#dcd4f0"/>`},
-  directions:{ja:'道案内',icon:'🗺️',sky:['#dff3e4','#fff6d8'],
+  directions:{name:'Directions',icon:'🗺️',sky:['#dff3e4','#fff6d8'],
     en:'asking for and following directions on the street or in a station: which way, how far, landmarks, which train or exit, being lost.',
     art:`${cloud(40,50,.8)}${cloud(300,40,.7)}
       <path d="M0 210c80-40 160-20 220-40s120-20 180 0v130H0z" fill="#b9e2c4"/><path d="M0 240c100-30 200-10 400-30v90H0z" fill="#9fd3ad"/>
       <path d="M160 300c10-40 60-60 120-80 40-14 80-20 120-22v8c-40 2-78 8-116 20-56 18-100 40-104 74z" fill="#fff3d6"/>
       <g transform="translate(110 120)"><rect x="-4" y="0" width="8" height="120" fill="#b48a6a"/><path d="M4 8h60l14 13-14 13H4z" fill="#f9dc7a"/><path d="M-4 44h-60l-14 13 14 13h60z" fill="#86d3c7"/><path d="M4 80h50l12 11-12 11H4z" fill="#f2879e"/></g>
       <g transform="translate(300 110)"><path d="M0 50C-30 14-24-20 0-20s30 34 0 70z" fill="#e8457f"/><circle cy="-2" r="9" fill="#fff"/></g>`},
-  dinner:{ja:'ディナー',icon:'🍷',sky:['#3a2f63','#a9668e'],
+  dinner:{name:'Dinner Out',icon:'🍷',sky:['#3a2f63','#a9668e'],
     en:'dinner at a nice restaurant: being seated, asking for recommendations, wine, allergies, complimenting the food, asking for the check.',
     art:`<path d="M-10 30Q200 110 410 30" fill="none" stroke="#1b1430" stroke-opacity=".5" stroke-width="2"/><g fill="#f9dc7a">${[30,80,130,180,230,280,330,380].map(x=>`<circle cx="${x}" cy="${30+80*(1-((x-200)/210)**2)*0.75}" r="4"/>`).join('')}</g>
       <rect x="20" y="226" width="360" height="12" rx="6" fill="#fffaf2" opacity=".9"/><rect y="238" width="400" height="62" fill="#2a2147" opacity=".55"/>
@@ -1336,26 +1336,26 @@ const SCENES={
       <ellipse cx="200" cy="222" rx="54" ry="10" fill="#fffaf2"/><ellipse cx="200" cy="220" rx="30" ry="5" fill="#e7a85a"/>
       <g transform="translate(160 150)"><path d="M-14 0h28c0 26-28 26-28 0z" fill="#fff" opacity=".85"/><path d="M-12 8h24c-2 14-22 14-24 0z" fill="#a9325e"/><path d="M0 22v46M-12 70h24" stroke="#fff" stroke-width="3" opacity=".85"/></g>
       <g transform="translate(240 150)"><path d="M-14 0h28c0 26-28 26-28 0z" fill="#fff" opacity=".85"/><path d="M-12 8h24c-2 14-22 14-24 0z" fill="#a9325e"/><path d="M0 22v46M-12 70h24" stroke="#fff" stroke-width="3" opacity=".85"/></g>`},
-  laundromat:{ja:'コインランドリー',icon:'🧺',sky:['#d7f0f5','#eef7ff'],
+  laundromat:{name:'Laundromat',icon:'🧺',sky:['#d7f0f5','#eef7ff'],
     en:'at a coin laundry: how the machines work, getting change, detergent, how long it takes, politely asking other customers.',
     art:`${[60,110,170,260,330,90,300].map((x,i)=>`<circle cx="${x}" cy="${40+(i*37)%90}" r="${6+i%3*4}" fill="#fff" stroke="#9fd0e0" stroke-width="2" opacity=".85"/>`).join('')}
       <rect y="250" width="400" height="50" fill="#cfe2ea"/>
       ${[70,200,330].map(x=>`<g transform="translate(${x} 160)"><rect x="-55" y="-30" width="110" height="122" rx="10" fill="#fffaf2"/><rect x="-55" y="-30" width="110" height="22" rx="10" fill="#e3edf3"/><circle cx="-36" cy="-19" r="4" fill="#e8457f"/><rect x="-24" y="-23" width="30" height="8" rx="4" fill="#9fd0e0"/><circle cy="38" r="38" fill="#c9dde6"/><circle cy="38" r="30" fill="#9fd0e0"/><path d="M-30 44c10-8 20 8 30 0s20 8 30 0v6a30 30 0 0 1-60 0z" fill="#6fb6cf"/><circle cx="-10" cy="28" r="4" fill="#fff" opacity=".8"/></g>`).join('')}`},
-  nba:{ja:'NBA観戦',icon:'🏀',sky:['#2b2f5a','#c4553d'],
+  nba:{name:'NBA Game',icon:'🏀',sky:['#2b2f5a','#c4553d'],
     en:'going to an NBA game: tickets and finding your seat, buying food and merch, cheering, reacting to plays, chatting with fans next to you.',
     art:`<g fill="#fff3d6" opacity=".14"><path d="M40 0l60 0-30 250zM300 0h60l-30 250z"/></g><g fill="#fff3d6"><circle cx="70" cy="10" r="8"/><circle cx="330" cy="10" r="8"/></g>
       <g transform="translate(200 60)"><rect x="-70" y="0" width="140" height="90" rx="6" fill="#fffaf2"/><rect x="-26" y="40" width="52" height="38" fill="none" stroke="#e8457f" stroke-width="4"/><rect x="-6" y="90" width="12" height="40" fill="#8a7f99"/><ellipse cx="0" cy="96" rx="30" ry="6" fill="none" stroke="#f2875e" stroke-width="5"/><path d="M-28 98l8 34M28 98l-8 34M-14 100l4 34M14 100l-4 34M0 102v32" stroke="#fff" stroke-width="2" opacity=".85"/></g>
       <g transform="translate(300 190)"><circle r="30" fill="#f2875e"/><path d="M-30 0h60M0-30v60M-21-21c12 12 12 30 0 42M21-21c-12 12-12 30 0 42" fill="none" stroke="#7a3a24" stroke-width="2.5"/></g>
       <rect y="240" width="400" height="60" fill="#d9a066"/><rect y="240" width="400" height="5" fill="#fff" opacity=".6"/>
       <g fill="#1b1430" opacity=".55">${Array.from({length:16},(_,i)=>`<circle cx="${12+i*25}" cy="${232-(i%2)*6}" r="9"/>`).join('')}</g>`},
-  friends:{ja:'友達になる',icon:'🤝',sky:['#fff1c4','#ffd9cf'],
+  friends:{name:'Making Friends',icon:'🤝',sky:['#fff1c4','#ffd9cf'],
     en:'making a new friend: introducing yourself, finding things in common, giving compliments, suggesting to hang out, exchanging contacts.',
     art:`${sparkle(40,40,1.2,'#fff')}${sparkle(360,60,1)}${sparkle(200,30,.8)}
       <g transform="translate(70 70)"><rect width="150" height="70" rx="35" fill="#fffaf2"/><path d="M30 64l-8 26 30-22z" fill="#fffaf2"/><text x="75" y="44" font-size="22" font-family="Georgia,serif" text-anchor="middle" fill="#e8457f">Hi there!</text></g>
       <g transform="translate(180 150)"><rect width="190" height="70" rx="35" fill="#4b3a8c"/><path d="M160 64l8 26-30-22z" fill="#4b3a8c"/><text x="95" y="44" font-size="18" font-family="Georgia,serif" text-anchor="middle" fill="#f9dc7a">Nice to meet you!</text></g>
       <path d="M100 250c-30-24-44-50-20-62 10-5 20 0 20 10 0-10 10-15 20-10 24 12 10 38-20 62z" fill="#f2879e" transform="translate(-30 20) scale(.8)"/>
       <rect y="262" width="400" height="38" fill="#ffe2b8"/>`},
-  family:{ja:'家族との会話',icon:'🏠',sky:['#ffe9d6','#fff7ec'],
+  family:{name:'Family Talk',icon:'🏠',sky:['#ffe9d6','#fff7ec'],
     en:'everyday talk at home with family: meals, plans for the day, chores, asking for help, how was your day, good night.',
     art:`${cloud(40,50,.8)}${cloud(310,60,.7)}
       <path d="M260 60c10-14 0-20 8-34" fill="none" stroke="#d8c9c0" stroke-width="5" stroke-linecap="round"/><rect x="250" y="70" width="20" height="40" fill="#c4553d"/>
@@ -1364,14 +1364,14 @@ const SCENES={
       <rect x="180" y="185" width="40" height="65" rx="4" fill="#b48a6a"/><circle cx="212" cy="220" r="3" fill="#f9dc7a"/>
       <path d="M200 92c-10-9-16-18-9-23 4-3 9-1 9 4 0-5 5-7 9-4 7 5 1 14-9 23z" fill="#f2879e"/>
       <rect y="250" width="400" height="50" fill="#cfe8b8"/><g transform="translate(355 200)"><rect x="-5" y="10" width="10" height="45" fill="#b48a6a"/><circle r="30" fill="#9fd3ad"/></g><g transform="translate(40 215)"><circle r="20" fill="#9fd3ad"/><rect x="-4" y="12" width="8" height="25" fill="#b48a6a"/></g>`},
-  partner:{ja:'恋人との会話',icon:'💕',sky:['#ffd3e2','#e9d9ff'],
+  partner:{name:'With Your Partner',icon:'💕',sky:['#ffd3e2','#e9d9ff'],
     en:'talking with a romantic partner: affection, missing each other, planning dates, small check-ins, apologizing, saying thank you.',
     art:`<circle cx="330" cy="60" r="26" fill="#fff6d8"/><circle cx="342" cy="52" r="24" fill="#f4dcf2"/>${sparkle(60,50,1)}${sparkle(260,40,.8)}${sparkle(110,110,.6)}
       <path d="M200 120c-34-28-52-56-26-70 12-6 26 0 26 12 0-12 14-18 26-12 26 14 8 42-26 70z" fill="#e8457f"/>
       <g transform="translate(150 180)"><path d="M-30 0h60l-6 60h-48z" fill="#fffaf2"/><path d="M30 12c22 0 22 30-2 30" fill="none" stroke="#fffaf2" stroke-width="8"/><path d="M-6 26c-6-6-8-11-4-13 2-1 4 0 4 2 0-2 2-3 4-2 4 2 2 7-4 13z" fill="#f2879e"/></g>
       <g transform="translate(250 180)"><path d="M-30 0h60l-6 60h-48z" fill="#c9b8f0"/><path d="M-30 12c-22 0-22 30 2 30" fill="none" stroke="#c9b8f0" stroke-width="8"/><path d="M0 26c-6-6-8-11-4-13 2-1 4 0 4 2 0-2 2-3 4-2 4 2 2 7-4 13z" fill="#fff"/></g>
       <rect x="60" y="240" width="280" height="10" rx="5" fill="#d8b4d6"/><rect y="250" width="400" height="50" fill="#f4d6e8"/>`},
-  casual:{ja:'カジュアルな会話',icon:'💬',sky:['#d8f3ee','#fff3df'],
+  casual:{name:'Casual Chat',icon:'💬',sky:['#d8f3ee','#fff3df'],
     en:'casual everyday conversation with friends: reacting, giving opinions, catching up, joking, making plans, texting-style talk.',
     art:`${sparkle(50,60,1)}${sparkle(350,40,1.1)}${sparkle(320,140,.7)}
       <g transform="translate(130 40)"><rect width="140" height="220" rx="22" fill="#2c7b74"/><rect x="10" y="18" width="120" height="186" rx="12" fill="#fffaf2"/>
@@ -1379,7 +1379,7 @@ const SCENES={
         <text x="53" y="49" font-size="11" font-family="sans-serif" text-anchor="middle" fill="#4b3a8c">hey!!</text><text x="87" y="81" font-size="11" font-family="sans-serif" text-anchor="middle" fill="#fff">what's up?</text><text x="61" y="113" font-size="11" font-family="sans-serif" text-anchor="middle" fill="#4b3a8c">wanna grab food?</text><text x="92" y="145" font-size="11" font-family="sans-serif" text-anchor="middle" fill="#fff">I'm in!</text></g>
       <g transform="translate(330 220)"><circle r="30" fill="#f9dc7a"/><circle cx="-10" cy="-6" r="4" fill="#4b3a8c"/><circle cx="10" cy="-6" r="4" fill="#4b3a8c"/><path d="M-14 8c8 10 20 10 28 0" fill="none" stroke="#4b3a8c" stroke-width="4" stroke-linecap="round"/></g>
       <rect y="262" width="400" height="38" fill="#c7ebe3"/>`},
-  custom:{ja:'自由入力',icon:'✏️',sky:['#46337a','#ef8f68'],en:'',
+  custom:{name:'Custom',icon:'✏️',sky:['#46337a','#ef8f68'],en:'',
     art:`<circle cx="320" cy="70" r="30" fill="#fff2c4"/><circle cx="334" cy="60" r="27" fill="#5a3f82"/>${sparkle(70,50,1)}${sparkle(240,40,.7)}
       <g transform="translate(150 70) scale(2.6)"><ellipse cx="34" cy="61" rx="16" ry="2" fill="#1b1430" opacity=".35"/><path fill="none" stroke="#1b1430" stroke-width="3.6" stroke-linecap="round" d="M24 59C13 59 9 50 10 41c.6-5 3-8 5.5-7.5"/><path fill="#1b1430" d="M23.5 18 24 5.5l7 7.5h6l7-7.5.5 12.5c1.5 2 2 4 2 6 0 3.5-1.6 6.3-4 8 4.5 3.5 7.5 10.5 7.5 17.5 0 6.5-3.5 10-9 10H28c-5.5 0-9-3.5-9-10 0-7 3-14 7.5-17.5-2.4-1.7-4-4.5-4-8 0-2 .5-4 1-6z"/><g fill="#e8457f"><path d="M11.5 41.5 5 38.5v6.5zM12.5 41.5l6.5-3v6.5z"/><circle cx="12" cy="41.6" r="1.9"/></g></g>`}
 };
@@ -1397,12 +1397,13 @@ function renderQuickMenu(){
   const box=$('#qkGrid');box.innerHTML='';
   Object.entries(SCENES).filter(([id])=>id!=='custom').forEach(([id,s])=>{
     const b=el('button','qk-sit');b.style.background=sceneBg(id);b.innerHTML=sceneSVG(id);
-    b.appendChild(el('span','qk-sit-name ja',`${s.icon} ${s.ja}`));
+    b.appendChild(el('span','qk-sit-name',`${s.icon} ${s.name}`));
     b.onclick=()=>startQuick(id);box.appendChild(b);
   });
 }
 function setScene(id){
   const sc=$('#scene');
+  $('#askTabLabel').textContent=id?'Ask':'質問';
   if(!id){document.body.classList.remove('qk-playing');return}
   sc.style.background=sceneBg(id);sc.innerHTML=sceneSVG(id);
   document.body.classList.add('qk-playing');
@@ -1428,18 +1429,18 @@ ${profile.trim()?'- When it fits naturally, a couple of items may reflect the le
 async function startQuick(id,customText){
   unlockAudio();
   const s=SCENES[id];
-  qk={sit:id==='custom'?'custom:'+customText:id,scene:id,label:id==='custom'?customText:s.ja,icon:s.icon,items:[],i:0,shown:false};
+  qk={sit:id==='custom'?'custom:'+customText:id,scene:id,label:id==='custom'?customText:s.name,icon:s.icon,items:[],i:0,shown:false};
   setScene(id);showQuickView('play');
   $('#qkLabel').textContent=`${qk.icon} ${qk.label}`;
-  $('#qkCard').innerHTML='';$('#qkCard').appendChild(el('div','qk-loading ja','問題を作っています…'));
+  $('#qkCard').innerHTML='';$('#qkCard').appendChild(el('div','qk-loading','Writing your lines…'));
   renderQkProgress();
-  waitStart('問題を作っています…');
+  waitStart('Writing your lines…');
   try{
     const sitText=id==='custom'?`${customText} (the learner described this situation in their own words)`:s.en;
     const j=await gemini(settings.chatModel,{contents:[{role:'user',parts:[{text:quickPrompt(sitText)}]}],
       generationConfig:{responseMimeType:'application/json',responseSchema:QUIZ_SCHEMA,temperature:0.9}});
     const items=(parseJSON(textOf(j)).items||[]).filter(x=>x.ja&&x.en).slice(0,QK_COUNT);
-    if(!items.length)throw new Error('問題を作れませんでした。もう一度試してください。');
+    if(!items.length)throw new Error("Couldn't make the lines. Please try again.");
     qk.items=items;
     qkSeen[qk.sit]=[...(qkSeen[qk.sit]||[]),...items.map(x=>x.en)].slice(-60);store.set('qkSeen',qkSeen);
     showQuestion(0);
@@ -1447,7 +1448,7 @@ async function startQuick(id,customText){
     console.error(e);
     const c=$('#qkCard');c.innerHTML='';
     c.appendChild(el('div','qk-loading ja',e.message||String(e)));
-    const b=el('button','btn','↻ もう一度');b.onclick=()=>startQuick(id,customText);c.appendChild(b);
+    const b=el('button','btn','↻ Try again');b.onclick=()=>startQuick(id,customText);c.appendChild(b);
   }finally{waitEnd()}
 }
 function renderQkProgress(){
@@ -1460,30 +1461,30 @@ function showQuestion(i){
   qk.i=i;qk.shown=false;stopSpeaking();
   const it=qk.items[i],c=$('#qkCard');c.innerHTML='';c.classList.remove('shown');
   c.appendChild(el('div','qk-ja ja',it.ja));
-  c.appendChild(el('div','qk-hint ja','英語で声に出して言ってみよう'));
+  c.appendChild(el('div','qk-hint','Say it out loud in English'));
   const ans=el('div','qk-ans');
   ans.appendChild(el('div','qk-en',it.en));
-  if(it.alt&&it.alt.trim()&&it.alt.trim()!==it.en.trim()){const a=el('div','qk-alt ja','別の言い方: ');a.appendChild(el('span','',it.alt));ans.appendChild(a)}
+  if(it.alt&&it.alt.trim()&&it.alt.trim()!==it.en.trim()){const a=el('div','qk-alt','Also: ');a.appendChild(el('span','',it.alt));ans.appendChild(a)}
   if(it.note_ja)ans.appendChild(el('div','qk-note ja','💡 '+it.note_ja));
   const tools=el('div','tools');
-  const play=el('button','chip','▶ もう一度');play.onclick=()=>speak(it.en);
+  const play=el('button','chip','▶ Play');play.onclick=()=>speak(it.en);
   const saved=isSaved(it.en);
   const add=el('button','chip qk-add'+(saved?' done':''),saved?'✓ Notebook':'＋ Notebook');
   add.onclick=e=>{e.stopPropagation();
-    if(saveToNotebook(it.en,it.ja,`瞬間英作文 · ${qk.label}`))toast('Notebook に追加しました');else toast('もう Notebook に入っています');
+    if(saveToNotebook(it.en,it.ja,`Quick Drill · ${qk.label}`))toast('Added to Notebook');else toast('Already in your Notebook');
     add.textContent='✓ Notebook';add.classList.add('done')};
-  tools.append(play,add,askChip(`${it.ja} → ${it.en}`));
+  tools.append(play,add,askChip(`${it.ja} → ${it.en}`,'💬 Ask'));
   tools.addEventListener('click',e=>e.stopPropagation());
   ans.appendChild(tools);c.appendChild(ans);
   c.onclick=()=>{if(!qk.shown)reveal()};
   $('#qkPrev').disabled=i===0;
-  $('#qkMain').textContent='答えを見る';
+  $('#qkMain').textContent='Show answer';
   renderQkProgress();
   prefetchSpeech(it.en);
 }
 function reveal(){
   qk.shown=true;$('#qkCard').classList.add('shown');
-  $('#qkMain').textContent=qk.i<qk.items.length-1?'次へ →':'結果を見る';
+  $('#qkMain').textContent=qk.i<qk.items.length-1?'Next →':'See all';
   speak(qk.items[qk.i].en);
   if(qk.items[qk.i+1])prefetchSpeech(qk.items[qk.i+1].en);
 }
@@ -1496,7 +1497,7 @@ function qkNext(){
 function qkPrev(){if(qk&&qk.i>0){$('#qkCard').classList.remove('shown');showQuestion(qk.i-1)}}
 function showQuickDone(){
   stopSpeaking();showQuickView('done');
-  $('#qkDoneTitle').textContent=`${qk.icon} ${qk.label} — おつかれさま！`;
+  $('#qkDoneTitle').textContent=`${qk.icon} ${qk.label} — nicely done!`;
   const list=$('#qkList');list.innerHTML='';
   qk.items.forEach(it=>{
     const row=el('div','qk-row');
@@ -1505,8 +1506,8 @@ function showQuickDone(){
     const play=el('button','chip','▶');play.onclick=()=>speak(it.en);
     const saved=isSaved(it.en);
     const add=el('button','chip qk-add'+(saved?' done':''),saved?'✓':'＋');
-    add.onclick=()=>{saveToNotebook(it.en,it.ja,`瞬間英作文 · ${qk.label}`);add.textContent='✓';add.classList.add('done');toast('Notebook に追加しました')};
-    tools.append(play,add,askChip(`${it.ja} → ${it.en}`));row.appendChild(tools);list.appendChild(row);
+    add.onclick=()=>{saveToNotebook(it.en,it.ja,`Quick Drill · ${qk.label}`);add.textContent='✓';add.classList.add('done');toast('Added to Notebook')};
+    tools.append(play,add,askChip(`${it.ja} → ${it.en}`,'💬 Ask'));row.appendChild(tools);list.appendChild(row);
   });
 }
 function showQuickView(v){
