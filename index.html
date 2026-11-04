@@ -487,10 +487,10 @@ body.resizing .ask{transition:none}
       <div class="muted ja" style="margin-top:6px">ここに書いた内容から Margo が話題を選び、あなたの生活や気持ちについて質問します。Shelf の「About me」の本で、自分のことを話す練習もできます。内容はこのブラウザ内にだけ保存されます。</div>
 
       <label for="chatModel">Conversation model</label>
-      <input id="chatModel" placeholder="gemini-3.8-flash">
+      <input id="chatModel" placeholder="gemini-3.8-flash-lite">
 
       <label for="chatFallback">Backup model（混雑時の予備）</label>
-      <input id="chatFallback" placeholder="gemini-flash-lite-latest">
+      <input id="chatFallback" placeholder="gemini-3.8-flash">
       <div class="muted ja" style="margin-top:6px">混み合っているときは自動で何回か送り直し、それでもだめならこのモデルで試します。空欄にすると予備は使いません。</div>
 
       <label for="speed">Speed（返事の速さ）</label>
@@ -585,7 +585,7 @@ I'm not really into ... | 〜はあまり好きじゃない
 That makes sense. | なるほど、納得です
 I was wondering if ... | 〜していただけないかと思って
 Can you recommend a good book? | おすすめの本はありますか？`;
-const DEFAULT_SETTINGS={apiKey:'',level:'intermediate (CEFR B1)',chatModel:'gemini-3.8-flash',chatFallback:'gemini-flash-lite-latest',speed:'fast',ttsMode:'gemini',
+const DEFAULT_SETTINGS={apiKey:'',level:'intermediate (CEFR B1)',chatModel:'gemini-3.8-flash-lite',chatFallback:'gemini-3.8-flash',speed:'fast',ttsMode:'gemini',
   ttsModel:'gemini-3.8-flash-lite-tts',voice:'Kore',slow:false,autoJa:false,
   register:'polite',gender:'woman',age:'in her/his 30s',persona:'品があって感じのいい人'};
 const REGISTERS={
@@ -605,6 +605,12 @@ function speakerProfile(){
 }
 
 let settings=Object.assign({},DEFAULT_SETTINGS,store.get('settings',{}));
+// One-time move to the faster lite model for anyone still on the old defaults.
+if(!store.get('liteMove',false)){
+  if(!settings.chatModel||settings.chatModel==='gemini-3.8-flash')settings.chatModel=DEFAULT_SETTINGS.chatModel;
+  if(!settings.chatFallback||settings.chatFallback==='gemini-flash-lite-latest')settings.chatFallback=DEFAULT_SETTINGS.chatFallback;
+  store.set('settings',settings);store.set('liteMove',true);
+}
 let phrasesText=store.get('phrases',DEFAULT_PHRASES);
 let notebook=store.get('notebook',[]);
 let profile=store.get('profile','');
@@ -846,6 +852,7 @@ async function gemini(model,body,opts={}){
       try{return await callModel(models[mi],body,opts.onText)}
       catch(e){
         last=e;
+        if(e.status===404&&mi===0&&models.length>1)break; // model name not found: go straight to the backup
         if(!e.busy){if(mi>0)break;throw e} // a broken fallback model shouldn't hide the real problem
         if(a<tries-1){
           if(waits)$('#waitText').textContent=`混み合っています。再試行中…（${a+2}/${tries}）`;
