@@ -493,6 +493,13 @@ body.resizing .ask{transition:none}
       <input id="chatFallback" placeholder="gemini-flash-lite-latest">
       <div class="muted ja" style="margin-top:6px">混み合っているときは自動で何回か送り直し、それでもだめならこのモデルで試します。空欄にすると予備は使いません。</div>
 
+      <label for="speed">Speed（返事の速さ）</label>
+      <select id="speed">
+        <option value="fast">Fast（速さ優先・おすすめ）</option>
+        <option value="careful">Careful（じっくり考える・遅め）</option>
+      </select>
+      <div class="muted ja" style="margin-top:6px">Fast は AI が考える時間を最小にして、返事を速くします。添削をもっと丁寧にしたいときは Careful に。</div>
+
       <label for="ttsMode">AI voice</label>
       <select id="ttsMode">
         <option value="gemini">Gemini voice（自然な声）</option>
@@ -578,7 +585,7 @@ I'm not really into ... | 〜はあまり好きじゃない
 That makes sense. | なるほど、納得です
 I was wondering if ... | 〜していただけないかと思って
 Can you recommend a good book? | おすすめの本はありますか？`;
-const DEFAULT_SETTINGS={apiKey:'',level:'intermediate (CEFR B1)',chatModel:'gemini-3.8-flash',chatFallback:'gemini-flash-lite-latest',ttsMode:'gemini',
+const DEFAULT_SETTINGS={apiKey:'',level:'intermediate (CEFR B1)',chatModel:'gemini-3.8-flash',chatFallback:'gemini-flash-lite-latest',speed:'fast',ttsMode:'gemini',
   ttsModel:'gemini-3.8-flash-lite-tts',voice:'Kore',slow:false,autoJa:false,
   register:'polite',gender:'woman',age:'in her/his 30s',persona:'品があって感じのいい人'};
 const REGISTERS={
@@ -667,7 +674,7 @@ $('#savePhrases').onclick=()=>{phrasesText=$('#phrases').value;store.set('phrase
 $('#randomBtn').onclick=()=>{const ps=parsePhrases();if(ps.length)startChapter(ps[Math.floor(Math.random()*ps.length)])};
 
 /* ---------- settings ---------- */
-const FORM_KEYS=['apiKey','level','register','gender','age','persona','chatModel','chatFallback','ttsMode','ttsModel','voice'];
+const FORM_KEYS=['apiKey','level','register','gender','age','persona','chatModel','chatFallback','speed','ttsMode','ttsModel','voice'];
 function loadSettingsForm(){
   for(const k of FORM_KEYS)$('#'+k).value=settings[k];
   $('#slow').checked=settings.slow;$('#autoJa').checked=settings.autoJa;
@@ -765,18 +772,68 @@ $('#testVoice').onclick=()=>{unlockAudio();$('#saveSettings').click();speak("Hi!
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 // Overloaded / rate-limited / transient server errors are worth retrying.
 const isBusyStatus=s=>s===429||s===500||s===502||s===503||s===504;
-async function geminiOnce(model,body){
+// One request. With onText, the reply is streamed (SSE) and onText(fullTextSoFar) is called as it grows.
+async function geminiOnce(model,body,onText){
+  const stream=!!onText;
   let r;
   try{
-    r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{
+    r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:${stream?'streamGenerateContent?alt=sse':'generateContent'}`,{
       method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':settings.apiKey},body:JSON.stringify(body)});
   }catch(e){const err=new Error('ネットにつながりませんでした');err.busy=true;throw err}
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok){const err=new Error(j.error?.message||('HTTP '+r.status));err.status=r.status;err.busy=isBusyStatus(r.status);throw err}
-  return j;
+  if(!r.ok){
+    const j=await r.json().catch(()=>({}));
+    const err=new Error(j.error?.message||('HTTP '+r.status));err.status=r.status;err.busy=isBusyStatus(r.status);throw err;
+  }
+  if(!stream||!r.body)return r.json();
+  const reader=r.body.getReader(),dec=new TextDecoder();
+  let buf='',text='';
+  try{
+    for(;;){
+      const {done,value}=await reader.read();
+      if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      let i;
+      while((i=buf.indexOf('\n'))>=0){
+        const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+        if(!line.startsWith('data:'))continue;
+        let ev;try{ev=JSON.parse(line.slice(5))}catch(e){continue}
+        if(ev.error){const err=new Error(ev.error.message||'stream error');err.status=ev.error.code;err.busy=true;throw err}
+        const t=textOf(ev);
+        if(t){text+=t;try{onText(text)}catch(e){console.error(e)}}
+      }
+    }
+  }catch(e){
+    if(e.status)throw e;
+    const err=new Error('返事の途中で接続が切れました');err.busy=true;throw err;
+  }
+  return {candidates:[{content:{parts:[{text}]}}]};
+}
+// Thinking settings to try in "fast" mode, quickest first. Models reject options they don't support with HTTP 400,
+// so we step down the list and remember what worked per model.
+function thinkingVariants(model){
+  if(settings.speed!=='fast')return [null];
+  if(/2\.5/.test(model))return [{thinkingBudget:0},{thinkingBudget:128},null];
+  return [{thinkingLevel:'minimal'},{thinkingLevel:'low'},null];
+}
+let thinkPick=store.get('thinkPick',{});
+async function callModel(model,body,onText){
+  if(body.generationConfig?.responseModalities)return geminiOnce(model,body); // audio (TTS): no thinking, no streaming
+  const vs=thinkingVariants(model),key=model+'|'+settings.speed;
+  let k=Math.min(thinkPick[key]||0,vs.length-1);
+  for(;;){
+    const b=vs[k]?Object.assign({},body,{generationConfig:Object.assign({},body.generationConfig,{thinkingConfig:vs[k]})}):body;
+    try{
+      const j=await geminiOnce(model,b,onText);
+      if(thinkPick[key]!==k){thinkPick[key]=k;store.set('thinkPick',thinkPick)}
+      return j;
+    }catch(e){
+      if(e.status===400&&vs[k]&&k<vs.length-1){k++;continue}
+      throw e;
+    }
+  }
 }
 // Retries the model a few times with backoff, then tries the fallback model.
-// opts.tries: attempts per model; opts.fallback: model to try after the main one gives up.
+// opts.tries: attempts per model; opts.fallback: model to try after the main one gives up; opts.onText: stream the reply.
 async function gemini(model,body,opts={}){
   if(!settings.apiKey){showTab('settings');throw new Error('Settings で Gemini API key を入力してください');}
   const tries=opts.tries??3;
@@ -786,7 +843,7 @@ async function gemini(model,body,opts={}){
   let last;
   for(let mi=0;mi<models.length;mi++){
     for(let a=0;a<tries;a++){
-      try{return await geminiOnce(models[mi],body)}
+      try{return await callModel(models[mi],body,opts.onText)}
       catch(e){
         last=e;
         if(!e.busy){if(mi>0)break;throw e} // a broken fallback model shouldn't hide the real problem
@@ -804,6 +861,29 @@ async function gemini(model,body,opts={}){
   err.busy=true;err.detail=last?.message;throw err;
 }
 function textOf(j){return (j.candidates?.[0]?.content?.parts||[]).filter(p=>p.text&&!p.thought).map(p=>p.text).join('')}
+// Streaming helpers: read a string field / the finished objects of an array out of JSON that is still arriving.
+function partialStr(buf,key){
+  const m=buf.match(new RegExp('"'+key+'"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)(")?'));
+  if(!m)return null;
+  let raw=m[1];
+  if(!m[2])raw=raw.replace(/\\(u[0-9a-fA-F]{0,3})?$/,'');
+  let value;try{value=JSON.parse('"'+raw+'"')}catch(e){value=raw}
+  return {value,done:!!m[2]};
+}
+function completeItems(buf,key){
+  const at=buf.indexOf('"'+key+'"');if(at<0)return [];
+  const start=buf.indexOf('[',at);if(start<0)return [];
+  const out=[];let depth=0,inStr=false,esc=false,from=-1;
+  for(let i=start+1;i<buf.length;i++){
+    const c=buf[i];
+    if(inStr){if(esc)esc=false;else if(c==='\\')esc=true;else if(c==='"')inStr=false;continue}
+    if(c==='"')inStr=true;
+    else if(c==='{'){if(!depth)from=i;depth++}
+    else if(c==='}'){if(!--depth){try{out.push(JSON.parse(buf.slice(from,i+1)))}catch(e){}}}
+    else if(c===']'&&!depth)break;
+  }
+  return out;
+}
 function parseJSON(s){try{return JSON.parse(s)}catch(e){const m=s.match(/\{[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw new Error('AIの返答を読み取れませんでした')}}
 
 function styleRules(){
@@ -857,15 +937,16 @@ const TURN_SCHEMA=S('OBJECT',{properties:{
   transcript:S('STRING'),has_mistake:S('BOOLEAN'),corrected:S('STRING'),
   points:S('ARRAY',{items:S('OBJECT',{properties:{wrong:S('STRING'),right:S('STRING'),why_ja:S('STRING')},required:['wrong','right','why_ja']})}),
   natural_version:S('STRING'),used_target_phrase:S('BOOLEAN'),reply:S('STRING'),reply_ja:S('STRING')},
-  required:['transcript','has_mistake','corrected','points','natural_version','used_target_phrase','reply','reply_ja']});
-const OPEN_SCHEMA=S('OBJECT',{properties:{reply:S('STRING'),reply_ja:S('STRING')},required:['reply','reply_ja']});
+  required:['transcript','has_mistake','corrected','points','natural_version','used_target_phrase','reply','reply_ja'],
+  propertyOrdering:['transcript','reply','reply_ja','has_mistake','corrected','points','natural_version','used_target_phrase']});
+const OPEN_SCHEMA=S('OBJECT',{properties:{reply:S('STRING'),reply_ja:S('STRING')},required:['reply','reply_ja'],propertyOrdering:['reply','reply_ja']});
 const HINT_SCHEMA=S('OBJECT',{properties:{hints:S('ARRAY',{items:S('OBJECT',{properties:{en:S('STRING'),ja:S('STRING')},required:['en','ja']})})},required:['hints']});
 
 function historyContents(){return cur.history.map(h=>({role:h.role,parts:[{text:h.text}]}))}
-async function ask(extraParts,schema){
+async function ask(extraParts,schema,onText){
   const contents=historyContents();contents.push({role:'user',parts:extraParts});
   const j=await gemini(settings.chatModel,{systemInstruction:{parts:[{text:systemPrompt()}]},contents,
-    generationConfig:{responseMimeType:'application/json',responseSchema:schema,temperature:0.8}});
+    generationConfig:{responseMimeType:'application/json',responseSchema:schema,temperature:0.8}},{onText});
   return parseJSON(textOf(j));
 }
 
@@ -890,9 +971,11 @@ async function startChapter(p){
     const opener=cur.aboutMe
       ?`(Start the conversation now: greet me warmly and ask one open question about me${pickTopic()?`, about this part of my profile: "${pickTopic()}"`:''}.)`
       :'(Start the conversation now: greet me warmly and ask a first question that leads toward the target phrase.)';
-    const r=await ask([{text:opener}],OPEN_SCHEMA);
+    const live=liveReply();
+    let r;
+    try{r=await ask([{text:opener}],OPEN_SCHEMA,live.onText)}catch(e){live.drop();throw e}
     cur.history.push({role:'user',text:opener},{role:'model',text:r.reply});
-    addAI(r.reply,r.reply_ja);
+    live.finish(r.reply,r.reply_ja);
   });
 }
 
@@ -915,32 +998,59 @@ async function learnerTurn(parts,typedText){
   $('#hints').innerHTML='';
   const placeholder=addMe(typedText||'…');
   setStatus('Margo があなたの英語をチェック中…');
+  const live=liveReply(buf=>{
+    if(typedText)return;
+    const t=partialStr(buf,'transcript');
+    if(t?.done)placeholder.querySelector('.txt').textContent=t.value||'(no speech)';
+  });
   let r;
-  try{r=await ask(parts,TURN_SCHEMA)}catch(e){placeholder.remove();throw e}
+  try{r=await ask(parts,TURN_SCHEMA,live.onText)}catch(e){placeholder.remove();live.drop();throw e}
   const said=typedText||r.transcript||'(no speech)';
   placeholder.querySelector('.txt').textContent=said;
   cur.history.push({role:'user',text:said},{role:'model',text:r.reply});
-  addCorrection(r,said);
-  addAI(r.reply,r.reply_ja);
+  addCorrection(r,said,live.el());
+  live.finish(r.reply,r.reply_ja);
 }
 
 /* ---------- rendering ---------- */
 function scrollDown(){requestAnimationFrame(()=>scrollTo({top:document.body.scrollHeight,behavior:'smooth'}))}
-function addAI(text,ja){
+function aiBubble(){
   const m=el('div','msg ai'+(settings.autoJa?' showja':''));
-  m.appendChild(el('span','who','Margo'));m.appendChild(el('div','txt',text));
-  const jp=el('div','jp',ja||'');m.appendChild(jp);
+  m.appendChild(el('span','who','Margo'));m.appendChild(el('div','txt',''));m.appendChild(el('div','jp',''));
+  $('#log').appendChild(m);scrollDown();return m;
+}
+function finishAI(m,text,ja,speakIt=true){
+  m.querySelector('.txt').textContent=text;m.querySelector('.jp').textContent=ja||'';
   const tools=el('div','tools');
   const play=el('button','chip','▶ もう一度');play.onclick=()=>speak(text,m);
   const tr=el('button','chip','和訳');tr.onclick=()=>m.classList.toggle('showja');
   tools.append(play,tr,askChip(text));m.appendChild(tools);
-  $('#log').appendChild(m);scrollDown();speak(text,m);
+  scrollDown();if(speakIt)speak(text,m);
+}
+function addAI(text,ja){finishAI(aiBubble(),text,ja)}
+// Shows Margo's "reply" while it streams in and starts speaking as soon as that field is complete,
+// before the rest of the JSON (corrections) has arrived. extra(buf) handles other streamed fields.
+function liveReply(extra){
+  let m=null,spoken='';
+  return {
+    onText(buf){
+      if(extra)extra(buf);
+      const rp=partialStr(buf,'reply');
+      if(!rp||!rp.value)return;
+      if(!m)m=aiBubble();
+      m.querySelector('.txt').textContent=rp.value;
+      if(rp.done&&spoken!==rp.value){spoken=rp.value;speak(rp.value,m)}
+    },
+    el:()=>m,
+    drop(){if(m){m.remove();m=null}},
+    finish(text,ja){finishAI(m||(m=aiBubble()),text,ja,spoken!==text)}
+  };
 }
 function addMe(text){
   const m=el('div','msg me');m.appendChild(el('span','who','You'));m.appendChild(el('div','txt',text));
   $('#log').appendChild(m);scrollDown();return m;
 }
-function addCorrection(r,said){
+function addCorrection(r,said,before){
   const pts=Array.isArray(r.points)?r.points:[];
   const good=!r.has_mistake||!pts.length;
   const c=el('div','note-card'+(good?' good':''));
@@ -959,7 +1069,8 @@ function addCorrection(r,said){
     const b=el('button','chip','▶ 正しい文を聞く');b.onclick=()=>speak(r.corrected);c.append(b,' ',askChip(r.corrected));
   }
   if(r.used_target_phrase&&!cur.aboutMe)c.appendChild(el('span','badge','★ Target phrase used!'));
-  $('#log').appendChild(c);scrollDown();
+  if(before)$('#log').insertBefore(c,before);else $('#log').appendChild(c);
+  scrollDown();
   if(!good||(r.natural_version&&r.natural_version.trim())){
     notebook.unshift({at:new Date().toISOString(),phrase:cur.phrase,said,corrected:good?'':r.corrected,points:pts,natural:r.natural_version||''});
     notebook=notebook.slice(0,500);store.set('notebook',notebook);
@@ -1105,7 +1216,8 @@ $('#askForm').onsubmit=async e=>{
   let failed;
   try{
     const j=await gemini(settings.chatModel,{systemInstruction:{parts:[{text:askSystemPrompt()}]},
-      contents:askHistory.slice(-20).map(h=>({role:h.role,parts:[{text:h.text}]})),generationConfig:{temperature:0.6}});
+      contents:askHistory.slice(-20).map(h=>({role:h.role,parts:[{text:h.text}]})),generationConfig:{temperature:0.6}},
+      {onText:t=>{wait.className='a';wait.textContent='';renderAnswer(wait,t,q);const l=$('#askLog');if(l.scrollHeight-l.scrollTop-l.clientHeight<120)l.scrollTop=l.scrollHeight}});
     const a=textOf(j).trim();if(!a)throw new Error('AIから返答がありませんでした');
     askHistory.push({role:'model',text:a});askHistory=askHistory.slice(-60);store.set('ask',askHistory);
   }catch(err){
@@ -1437,22 +1549,33 @@ async function startQuick(id,customText){
   waitStart('Writing your lines…');
   try{
     const sitText=id==='custom'?`${customText} (the learner described this situation in their own words)`:s.en;
+    const mine=qk;mine.loading=true;
     const j=await gemini(settings.chatModel,{contents:[{role:'user',parts:[{text:quickPrompt(sitText)}]}],
-      generationConfig:{responseMimeType:'application/json',responseSchema:QUIZ_SCHEMA,temperature:0.9}});
+      generationConfig:{responseMimeType:'application/json',responseSchema:QUIZ_SCHEMA,temperature:0.9}},
+      {onText:buf=>{
+        if(qk!==mine)return;
+        const got=completeItems(buf,'items').filter(x=>x.ja&&x.en).slice(0,QK_COUNT);
+        if(got.length<=qk.items.length)return;
+        qk.items=got;
+        if(!qk.started){qk.started=true;showQuestion(0)}else renderQkProgress();
+      }});
+    if(qk!==mine)return;
     const items=(parseJSON(textOf(j)).items||[]).filter(x=>x.ja&&x.en).slice(0,QK_COUNT);
     if(!items.length)throw new Error("Couldn't make the lines. Please try again.");
-    qk.items=items;
+    qk.items=items;qk.loading=false;
     qkSeen[qk.sit]=[...(qkSeen[qk.sit]||[]),...items.map(x=>x.en)].slice(-60);store.set('qkSeen',qkSeen);
-    showQuestion(0);
+    if(!qk.started){qk.started=true;showQuestion(0)}else renderQkProgress();
   }catch(e){
     console.error(e);
+    qk.loading=false;
+    if(qk.started&&qk.items.length){toast(`Only ${qk.items.length} lines came through: ${e.message}`,5000);renderQkProgress();return}
     const c=$('#qkCard');c.innerHTML='';
     c.appendChild(el('div','qk-loading ja',e.message||String(e)));
     const b=el('button','btn','↻ Try again');b.onclick=()=>startQuick(id,customText);c.appendChild(b);
   }finally{waitEnd()}
 }
 function renderQkProgress(){
-  const n=qk.items.length||QK_COUNT;
+  const n=qk.loading||!qk.items.length?QK_COUNT:qk.items.length;
   $('#qkCount').textContent=qk.items.length?`${Math.min(qk.i+1,n)} / ${n}`:'';
   const bar=$('#qkDots');bar.innerHTML='';
   for(let k=0;k<n;k++)bar.appendChild(el('i',k<qk.i?'done':k===qk.i&&qk.items.length?'on':''));
@@ -1484,13 +1607,14 @@ function showQuestion(i){
 }
 function reveal(){
   qk.shown=true;$('#qkCard').classList.add('shown');
-  $('#qkMain').textContent=qk.i<qk.items.length-1?'Next →':'See all';
+  $('#qkMain').textContent=qk.i<qk.items.length-1||qk.loading?'Next →':'See all';
   speak(qk.items[qk.i].en);
   if(qk.items[qk.i+1])prefetchSpeech(qk.items[qk.i+1].en);
 }
 function qkNext(){
   if(!qk||!qk.items.length)return;
   if(!qk.shown){reveal();return}
+  if(qk.i>=qk.items.length-1&&qk.loading){toast('Loading the next line…');return}
   $('#qkCard').classList.remove('shown');
   if(qk.i<qk.items.length-1)showQuestion(qk.i+1);else showQuickDone();
 }
