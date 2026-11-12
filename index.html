@@ -435,6 +435,10 @@ body.resizing .ask{transition:none}
       <input id="apiKey" type="password" autocomplete="off" placeholder="AIza...">
       <div class="muted ja" style="margin-top:6px">Google AI Studio（aistudio.google.com/apikey）で取得。キーはこのブラウザ内にだけ保存されます。</div>
 
+      <label for="claudeKey">Claude API key（任意）</label>
+      <input id="claudeKey" type="password" autocomplete="off" placeholder="sk-ant-...">
+      <div class="muted ja" style="margin-top:6px">Claude Console（platform.claude.com）で取得。Console の Limits で月の上限額を決めておくと安心です。Conversation model か Backup model に <b>claude-haiku-5-5</b> などを書くと Claude を使います。</div>
+
       <label for="level">Level</label>
       <select id="level">
         <option value="beginner (CEFR A2)">Beginner（初級）</option>
@@ -491,7 +495,8 @@ body.resizing .ask{transition:none}
 
       <label for="chatFallback">Backup model（混雑時の予備）</label>
       <input id="chatFallback" placeholder="gemini-3.8-flash">
-      <div class="muted ja" style="margin-top:6px">混み合っているときは自動で何回か送り直し、それでもだめならこのモデルで試します。空欄にすると予備は使いません。</div>
+      <div class="muted ja" style="margin-top:6px">混み合っているときは自動で何回か送り直し、それでもだめならこのモデルで試します。空欄にすると予備は使いません。<br>
+      Gemini と Claude を組み合わせられます（例: 会話 <b>claude-haiku-5-5</b>・予備 <b>gemini-3.8-flash</b>）。Claude は音声を直接聞けないので、Claude で会話するときは話した英語をブラウザが文字にしてから送ります。</div>
 
       <label for="speed">Speed（返事の速さ）</label>
       <select id="speed">
@@ -585,7 +590,7 @@ I'm not really into ... | 〜はあまり好きじゃない
 That makes sense. | なるほど、納得です
 I was wondering if ... | 〜していただけないかと思って
 Can you recommend a good book? | おすすめの本はありますか？`;
-const DEFAULT_SETTINGS={apiKey:'',level:'intermediate (CEFR B1)',chatModel:'gemini-3.8-flash-lite',chatFallback:'gemini-3.8-flash',speed:'fast',ttsMode:'gemini',
+const DEFAULT_SETTINGS={apiKey:'',claudeKey:'',level:'intermediate (CEFR B1)',chatModel:'gemini-3.8-flash-lite',chatFallback:'gemini-3.8-flash',speed:'fast',ttsMode:'gemini',
   ttsModel:'gemini-3.8-flash-lite-tts',voice:'Kore',slow:false,autoJa:false,
   register:'polite',gender:'woman',age:'in her/his 30s',persona:'品があって感じのいい人'};
 const REGISTERS={
@@ -680,7 +685,7 @@ $('#savePhrases').onclick=()=>{phrasesText=$('#phrases').value;store.set('phrase
 $('#randomBtn').onclick=()=>{const ps=parsePhrases();if(ps.length)startChapter(ps[Math.floor(Math.random()*ps.length)])};
 
 /* ---------- settings ---------- */
-const FORM_KEYS=['apiKey','level','register','gender','age','persona','chatModel','chatFallback','speed','ttsMode','ttsModel','voice'];
+const FORM_KEYS=['apiKey','claudeKey','level','register','gender','age','persona','chatModel','chatFallback','speed','ttsMode','ttsModel','voice'];
 function loadSettingsForm(){
   for(const k of FORM_KEYS)$('#'+k).value=settings[k];
   $('#slow').checked=settings.slow;$('#autoJa').checked=settings.autoJa;
@@ -747,7 +752,7 @@ const BACKUP_KEYS=['settings','phrases','notebook','profile','ask','askSize','ch
 $('#exportData').onclick=async()=>{
   const data={};
   for(const k of BACKUP_KEYS){const v=store.get(k,undefined);if(v!==undefined)data[k]=v}
-  if(data.settings&&!$('#exportKey').checked)data.settings=Object.assign({},data.settings,{apiKey:''});
+  if(data.settings&&!$('#exportKey').checked)data.settings=Object.assign({},data.settings,{apiKey:'',claudeKey:''});
   const name=`little-talks-backup-${new Date().toISOString().slice(0,10)}.json`;
   const file=new File([JSON.stringify({app:'little-talks',version:1,exportedAt:new Date().toISOString(),data},null,2)],name,{type:'application/json'});
   // On phones the share sheet is the reliable way to save into Files / iCloud Drive.
@@ -768,6 +773,7 @@ $('#importFile').onchange=async e=>{
   const d=json.data;
   // Keep this device's API key when the backup doesn't carry one.
   if(d.settings&&!d.settings.apiKey&&settings.apiKey)d.settings.apiKey=settings.apiKey;
+  if(d.settings&&!d.settings.claudeKey&&settings.claudeKey)d.settings.claudeKey=settings.claudeKey;
   for(const k of BACKUP_KEYS)if(k in d)store.set(k,d[k]);
   toast('読み込みました。再読み込みします…');setTimeout(()=>location.reload(),800);
 };
@@ -777,7 +783,86 @@ $('#testVoice').onclick=()=>{unlockAudio();$('#saveSettings').click();speak("Hi!
 /* ---------- Gemini ---------- */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 // Overloaded / rate-limited / transient server errors are worth retrying.
-const isBusyStatus=s=>s===429||s===500||s===502||s===503||s===504;
+const isBusyStatus=s=>s===429||s===500||s===502||s===503||s===504||s===529;
+const isClaude=m=>/^claude/i.test(m||'');
+const keyFor=m=>isClaude(m)?settings.claudeKey:settings.apiKey;
+const hasAudio=body=>(body.contents||[]).some(c=>(c.parts||[]).some(p=>p.inlineData));
+
+/* ---------- Claude ---------- */
+// Gemini's responseSchema (OBJECT/STRING…, propertyOrdering) → JSON Schema for Claude's structured outputs.
+// Property order is kept so streamed replies still arrive in the order the UI expects.
+function toJsonSchema(s){
+  const o={type:String(s.type).toLowerCase()};
+  if(s.items)o.items=toJsonSchema(s.items);
+  if(s.enum)o.enum=s.enum;
+  if(s.properties){
+    const keys=Object.keys(s.properties),ord=(s.propertyOrdering||[]).filter(k=>keys.includes(k));
+    o.properties={};
+    for(const k of [...ord,...keys.filter(k=>!ord.includes(k))])o.properties[k]=toJsonSchema(s.properties[k]);
+    o.required=s.required||keys;o.additionalProperties=false;
+  }
+  return o;
+}
+// Builds a Messages API request from the Gemini-shaped body the rest of the app uses.
+function toClaudeRequest(model,body,extra){
+  const msgs=[];
+  for(const c of body.contents||[]){
+    const role=c.role==='model'?'assistant':'user';
+    const text=(c.parts||[]).map(p=>p.text||'').filter(Boolean).join('\n');
+    if(!text)continue;
+    const last=msgs[msgs.length-1];
+    if(last&&last.role===role)last.content+='\n\n'+text;else msgs.push({role,content:text});
+  }
+  if(msgs[0]?.role==='assistant')msgs.unshift({role:'user',content:'(start)'});
+  const req={model,max_tokens:16000,messages:msgs};
+  const sys=(body.systemInstruction?.parts||[]).map(p=>p.text).join('\n');
+  if(sys)req.system=sys;
+  const schema=body.generationConfig?.responseSchema;
+  if(schema)req.output_config={format:{type:'json_schema',schema:toJsonSchema(schema)}};
+  if(extra?.thinking)req.thinking=extra.thinking;
+  if(extra?.effort)req.output_config=Object.assign({},req.output_config,{effort:extra.effort});
+  return req;
+}
+async function claudeOnce(model,body,onText,extra){
+  const stream=!!onText,req=toClaudeRequest(model,body,extra);
+  if(stream)req.stream=true;
+  let r;
+  try{
+    r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':settings.claudeKey,'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(req)});
+  }catch(e){const err=new Error('ネットにつながりませんでした');err.busy=true;throw err}
+  if(!r.ok){
+    const j=await r.json().catch(()=>({}));
+    const err=new Error(j.error?.message||('HTTP '+r.status));err.status=r.status;
+    err.busy=isBusyStatus(r.status)||j.error?.type==='overloaded_error';throw err;
+  }
+  const wrap=text=>({candidates:[{content:{parts:[{text}]}}]});
+  if(!stream||!r.body){const j=await r.json();return wrap((j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(''))}
+  const reader=r.body.getReader(),dec=new TextDecoder();
+  let buf='',text='';
+  try{
+    for(;;){
+      const {done,value}=await reader.read();
+      if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      let i;
+      while((i=buf.indexOf('\n'))>=0){
+        const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+        if(!line.startsWith('data:'))continue;
+        let ev;try{ev=JSON.parse(line.slice(5))}catch(e){continue}
+        if(ev.type==='error'){const err=new Error(ev.error?.message||'stream error');err.status=529;err.busy=true;throw err}
+        if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta'){
+          text+=ev.delta.text;try{onText(text)}catch(e){console.error(e)}
+        }
+      }
+    }
+  }catch(e){
+    if(e.status)throw e;
+    const err=new Error('返事の途中で接続が切れました');err.busy=true;throw err;
+  }
+  return wrap(text);
+}
 // One request. With onText, the reply is streamed (SSE) and onText(fullTextSoFar) is called as it grows.
 async function geminiOnce(model,body,onText){
   const stream=!!onText;
@@ -817,6 +902,8 @@ async function geminiOnce(model,body,onText){
 // Thinking settings to try in "fast" mode, quickest first. Models reject options they don't support with HTTP 400,
 // so we step down the list and remember what worked per model.
 function thinkingVariants(model){
+  // Claude: Haiku accepts thinking off; models that don't (400) step down to low effort.
+  if(isClaude(model))return settings.speed==='fast'?[{thinking:{type:'disabled'}},{effort:'low'},null]:[null];
   if(settings.speed!=='fast')return [null];
   if(/2\.5/.test(model))return [{thinkingBudget:0},{thinkingBudget:128},null];
   return [{thinkingLevel:'minimal'},{thinkingLevel:'low'},null];
@@ -827,9 +914,13 @@ async function callModel(model,body,onText){
   const vs=thinkingVariants(model),key=model+'|'+settings.speed;
   let k=Math.min(thinkPick[key]||0,vs.length-1);
   for(;;){
-    const b=vs[k]?Object.assign({},body,{generationConfig:Object.assign({},body.generationConfig,{thinkingConfig:vs[k]})}):body;
     try{
-      const j=await geminiOnce(model,b,onText);
+      let j;
+      if(isClaude(model))j=await claudeOnce(model,body,onText,vs[k]);
+      else{
+        const b=vs[k]?Object.assign({},body,{generationConfig:Object.assign({},body.generationConfig,{thinkingConfig:vs[k]})}):body;
+        j=await geminiOnce(model,b,onText);
+      }
       if(thinkPick[key]!==k){thinkPick[key]=k;store.set('thinkPick',thinkPick)}
       return j;
     }catch(e){
@@ -841,11 +932,16 @@ async function callModel(model,body,onText){
 // Retries the model a few times with backoff, then tries the fallback model.
 // opts.tries: attempts per model; opts.fallback: model to try after the main one gives up; opts.onText: stream the reply.
 async function gemini(model,body,opts={}){
-  if(!settings.apiKey){showTab('settings');throw new Error('Settings で Gemini API key を入力してください');}
   const tries=opts.tries??3;
-  const models=[model];
   const fb=opts.fallback===undefined?(model===settings.chatModel?settings.chatFallback:''):opts.fallback;
-  if(fb&&fb!==model)models.push(fb);
+  // Skip models that have no key, or that can't take this request (Claude can't hear audio).
+  const usable=m=>m&&keyFor(m)&&!(isClaude(m)&&hasAudio(body));
+  const models=[model,fb].filter((m,i,a)=>m&&a.indexOf(m)===i).filter(usable);
+  if(!models.length){
+    showTab('settings');
+    throw new Error(isClaude(model)&&hasAudio(body)?'Claude は音声を聞けません。Backup model に Gemini を入れるか、文字で入力してください'
+      :`Settings で ${isClaude(model)?'Claude':'Gemini'} API key を入力してください`);
+  }
   let last;
   for(let mi=0;mi<models.length;mi++){
     for(let a=0;a<tries;a++){
@@ -863,8 +959,8 @@ async function gemini(model,body,opts={}){
     if(mi<models.length-1&&waits)$('#waitText').textContent='混み合っているので予備のモデルで試しています…';
   }
   const err=new Error(last?.status===429
-    ?'Gemini の利用上限に達したか、混み合っています。少し時間をおいてから、もう一度試してください。'
-    :'Gemini が混み合っていて返事をもらえませんでした。少し時間をおいてから、もう一度試してください。');
+    ?'AI の利用上限に達したか、混み合っています。少し時間をおいてから、もう一度試してください。'
+    :'AI が混み合っていて返事をもらえませんでした。少し時間をおいてから、もう一度試してください。');
   err.busy=true;err.detail=last?.message;throw err;
 }
 function textOf(j){return (j.candidates?.[0]?.content?.parts||[]).filter(p=>p.text&&!p.thought).map(p=>p.text).join('')}
@@ -1257,8 +1353,35 @@ function setMic(state){
   const m=$('#mic');m.classList.toggle('rec',state==='rec');m.classList.toggle('busy',state==='busy');
   $('#micLabel').textContent=state==='rec'?'SEND':state==='busy'?'…':'TALK';
 }
+// Claude can't hear audio, so when it is the conversation model the browser turns speech into text.
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let sr=null;
+function startSR(){
+  const s={done:'',live:'',on:true,r:null};
+  const begin=()=>{
+    const r=new SR();r.lang='en-US';r.continuous=true;r.interimResults=true;
+    r.onresult=e=>{
+      let fin='',tmp='';
+      for(const x of e.results)(x.isFinal?(fin+=x[0].transcript+' '):(tmp+=x[0].transcript+' '));
+      s.live=(fin+tmp).trim();setStatus('🎙 '+[s.done,s.live].filter(Boolean).join(' '));
+    };
+    r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){s.on=false;toast('音声認識が使えません。マイクの許可を確認してください',6000)}};
+    // Some browsers stop on a pause; keep listening until the learner taps SEND.
+    r.onend=()=>{s.done=[s.done,s.live].filter(Boolean).join(' ');s.live='';if(s.on)try{begin()}catch(e){s.on=false}else s.finish?.()};
+    s.r=r;r.start();
+  };
+  begin();return s;
+}
+function stopSR(s){return new Promise(res=>{s.on=false;s.finish=()=>res(s.done.trim());try{s.r.stop()}catch(e){res(s.done.trim())}})}
 $('#mic').onclick=async()=>{
   unlockAudio();
+  if(sr){
+    const s=sr;sr=null;setMic('idle');
+    const said=await stopSR(s);
+    if(!said){setStatus('');toast('聞き取れませんでした。もう一度どうぞ');return}
+    run(()=>learnerTurn([{text:`Learner spoke this (a speech recognizer wrote it down and may have quietly fixed small grammar slips, so judge the wording as written; transcript must be exactly this): ${said}`}],said));
+    return;
+  }
   if(rec&&rec.state==='recording'){
     const blob=await stopRec();
     run(async()=>{
@@ -1270,6 +1393,10 @@ $('#mic').onclick=async()=>{
   }
   if(busy)return;
   stopSpeaking();
+  if(isClaude(settings.chatModel)&&settings.claudeKey&&SR){
+    try{sr=startSR();setMic('rec');setStatus('Listening… tap again when you finish');return}
+    catch(e){sr=null}
+  }
   try{
     micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
   }catch(e){toast('マイクが使えません。localhost で開いているか、マイクの許可を確認してください',6000);return;}
@@ -1662,7 +1789,7 @@ document.addEventListener('keydown',e=>{
 
 /* ---------- init ---------- */
 loadSettingsForm();renderStyleChip();renderShelf();renderAsk();renderQuickMenu();
-if(!settings.apiKey)setTimeout(()=>toast('まず Settings で Gemini API key を入力してください',5000),600);
+if(!settings.apiKey&&!settings.claudeKey)setTimeout(()=>toast('まず Settings で Gemini API key を入力してください',5000),600);
 if(location.protocol==='file:')setTimeout(()=>toast('マイクを使うには start.command から開いてください（localhost）',6000),2500);
 </script>
 </body>
