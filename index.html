@@ -491,7 +491,7 @@ body.resizing .ask{transition:none}
       <div class="muted ja" style="margin-top:6px">ここに書いた内容から Margo が話題を選び、あなたの生活や気持ちについて質問します。Shelf の「About me」の本で、自分のことを話す練習もできます。内容はこのブラウザ内にだけ保存されます。</div>
 
       <label for="chatModel">Conversation model</label>
-      <input id="chatModel" placeholder="gemini-3.8-flash-lite">
+      <input id="chatModel" placeholder="claude-haiku-5-5">
 
       <label for="chatFallback">Backup model（混雑時の予備）</label>
       <input id="chatFallback" placeholder="gemini-3.8-flash">
@@ -590,7 +590,7 @@ I'm not really into ... | 〜はあまり好きじゃない
 That makes sense. | なるほど、納得です
 I was wondering if ... | 〜していただけないかと思って
 Can you recommend a good book? | おすすめの本はありますか？`;
-const DEFAULT_SETTINGS={apiKey:'',claudeKey:'',level:'intermediate (CEFR B1)',chatModel:'gemini-3.8-flash-lite',chatFallback:'gemini-3.8-flash',speed:'fast',ttsMode:'gemini',
+const DEFAULT_SETTINGS={apiKey:'',claudeKey:'',level:'intermediate (CEFR B1)',chatModel:'claude-haiku-5-5',chatFallback:'gemini-3.8-flash',speed:'fast',ttsMode:'browser',
   ttsModel:'gemini-3.8-flash-lite-tts',voice:'Kore',slow:false,autoJa:false,
   register:'polite',gender:'woman',age:'in her/his 30s',persona:'品があって感じのいい人'};
 const REGISTERS={
@@ -615,6 +615,12 @@ if(!store.get('liteMove',false)){
   if(!settings.chatModel||settings.chatModel==='gemini-3.8-flash')settings.chatModel=DEFAULT_SETTINGS.chatModel;
   if(!settings.chatFallback||settings.chatFallback==='gemini-flash-lite-latest')settings.chatFallback=DEFAULT_SETTINGS.chatFallback;
   store.set('settings',settings);store.set('liteMove',true);
+}
+// One-time switch to Claude for conversation (Gemini as backup) and the browser voice, which avoid Gemini's busy waits.
+// Without a Claude key the app simply uses the Gemini backup.
+if(!store.get('claudeMove',false)){
+  settings.chatModel=DEFAULT_SETTINGS.chatModel;settings.chatFallback=DEFAULT_SETTINGS.chatFallback;settings.ttsMode=DEFAULT_SETTINGS.ttsMode;
+  store.set('settings',settings);store.set('claudeMove',true);
 }
 let phrasesText=store.get('phrases',DEFAULT_PHRASES);
 let notebook=store.get('notebook',[]);
