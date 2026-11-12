@@ -142,6 +142,37 @@ label{display:block;font-family:var(--block);font-size:11px;letter-spacing:.08em
 .note-card .head{font-family:var(--script);font-size:20px;color:var(--teal-deep)}
 .note-card.good .head{color:#b8862b}
 .note-card .fixed{font-family:var(--serif);font-size:19px;color:var(--navy);margin:4px 0}
+/* Lines (movie / drama repeat practice) */
+.ln-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed #e2d4bb}
+.ln-item .ln-name{flex:1;min-width:0;font-family:var(--serif);font-size:17px;color:var(--navy);cursor:pointer;overflow-wrap:anywhere}
+.ln-item .ln-count{font-size:12px;color:var(--ink-soft)}
+.ln-top{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.ln-title{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ln-tools{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 12px;color:#fff;font-size:13px}
+.ln-tools .ln-tog{display:flex;align-items:center;gap:5px;cursor:pointer;color:#fff;font-family:var(--ja);font-size:13px;
+  text-transform:none;letter-spacing:0;margin:0;font-weight:500}
+.ln-tog input{width:auto;margin:0}
+.ln-status{opacity:.85;font-size:12px}
+.ln-line{display:flex;align-items:flex-end;gap:8px;margin:0 0 16px}
+.ln-line.r{flex-direction:row-reverse}
+.ln-cat{flex:none;width:58px;height:58px}
+.ln-bubble{position:relative;flex:1;min-width:0;max-width:560px;background:#fffdf6;border-radius:18px;padding:10px 14px 8px;box-shadow:0 6px 16px rgba(20,10,40,.22)}
+.ln-bubble::after{content:"";position:absolute;bottom:14px;left:-8px;border:8px solid transparent;border-right-color:#fffdf6;border-left:0}
+.ln-line.r .ln-bubble::after{left:auto;right:-8px;border-right:0;border-left:8px solid #fffdf6}
+.ln-bubble.speaking{box-shadow:0 0 0 3px var(--gold),0 6px 16px rgba(20,10,40,.22)}
+.ln-en{font-family:var(--serif);font-size:18px;color:var(--navy);line-height:1.35}
+.ln-ja{font-family:var(--ja);font-size:13px;color:var(--ink-soft);margin-top:3px}
+.ln-hide-en .ln-en:not(.show),.ln-hide-ja .ln-ja:not(.show){filter:blur(6px);cursor:pointer;user-select:none}
+.ln-btns{display:flex;gap:6px;align-items:center;margin-top:6px}
+.ln-time{margin-left:auto;font-size:11px;color:#b9ab93}
+.note-card .okmark{display:inline-block;font-size:12px;color:#b8862b;margin-top:2px}
+.alts{margin-top:10px;padding-top:6px;border-top:1px dashed #e2d4bb}
+.alts-h{font-size:12px;color:var(--ink-soft);margin-bottom:2px}
+.alt{display:flex;align-items:flex-start;gap:8px;margin:6px 0}
+.alt-tag{flex:none;font-size:11px;background:#f3e8d6;color:var(--purple);border-radius:999px;padding:3px 8px;margin-top:3px;white-space:nowrap}
+.alt-body{flex:1;min-width:0}
+.alt-en{font-family:var(--serif);font-size:16px;color:var(--navy);line-height:1.35}
+.alt-note{font-size:12px;color:var(--ink-soft)}
 .pt{font-size:15px;margin:6px 0}
 .pt .w{text-decoration:line-through;text-decoration-color:var(--pink);text-decoration-thickness:2px;color:#9a6b7c}
 .pt .r{color:var(--teal-deep);font-weight:600}
@@ -325,6 +356,7 @@ body.resizing .ask{transition:none}
     <button data-tab="shelf" class="on">Shelf</button>
     <button data-tab="talk">Talk</button>
     <button data-tab="quick">Quick</button>
+    <button data-tab="lines">Lines</button>
     <button data-tab="notebook">Notebook</button>
     <button data-tab="settings">Settings</button>
   </nav>
@@ -413,6 +445,34 @@ body.resizing .ask{transition:none}
           <button class="btn ghost" id="qkMenu" type="button">Pick a scene</button>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- LINES: movie / drama lines to repeat -->
+  <section id="lines">
+    <div id="ln-menu">
+      <div class="page">
+        <h2>Lines</h2>
+        <div class="script">say it like they do</div>
+        <div class="muted ja" style="margin-top:4px">映画やドラマのセリフを、英語と日本語で見ながら ▶ で何度でも聞いて練習できます。Language Reactor で書き出した Excel（.xlsx）か、CSV / TSV（英語, 日本語）を読み込んでください。セリフはこのブラウザ内にだけ保存されます。</div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn" id="lnImport" type="button">Import file</button>
+          <input type="file" id="lnFile" accept=".xlsx,.csv,.tsv,.txt" style="display:none">
+        </div>
+        <div id="lnList" style="margin-top:14px"></div>
+      </div>
+    </div>
+    <div id="ln-play" style="display:none">
+      <div class="ln-top">
+        <button class="qk-pill" id="lnBack" type="button">← Lines</button>
+        <span class="qk-pill ja ln-title" id="lnTitle"></span>
+      </div>
+      <div class="ln-tools">
+        <label class="ln-tog ja"><input type="checkbox" id="lnHideEn"> 英語を隠す</label>
+        <label class="ln-tog ja"><input type="checkbox" id="lnHideJa"> 日本語を隠す</label>
+        <span class="ln-status ja" id="lnStatus"></span>
+      </div>
+      <div id="lnLines"></div>
     </div>
   </section>
 
@@ -659,6 +719,7 @@ function showTab(id){
   document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===id));
   $('#dock').style.display=(id==='talk'&&cur)?'block':'none';
   if(id==='notebook')renderNotebook();
+  if(id==='lines'&&!lnCur)renderLnList();
   if(id==='quick'&&qk&&$('#qk-menu').style.display==='none')setScene(qk.scene);else setScene(null);
   scrollTo({top:0});
 }
@@ -754,7 +815,7 @@ $('#quickRegister').onchange=e=>{
   toast(`話し方: ${REGISTERS[settings.register].ja}（次の返答から反映）`);
 };
 /* ---------- backup ---------- */
-const BACKUP_KEYS=['settings','phrases','notebook','profile','ask','askSize','chapters','qkSeen'];
+const BACKUP_KEYS=['settings','phrases','notebook','profile','ask','askSize','chapters','qkSeen','lines'];
 $('#exportData').onclick=async()=>{
   const data={};
   for(const k of BACKUP_KEYS){const v=store.get(k,undefined);if(v!==undefined)data[k]=v}
@@ -1036,8 +1097,10 @@ CORRECTION (for every learner turn)
 - "transcript": write EXACTLY what the learner said, word for word, keeping every grammar mistake, wrong word and missing article. Do NOT fix anything here. Leave out fillers like "uh/um". Write [inaudible] for parts you cannot hear.
 - Check grammar, word choice, prepositions, articles, tense, word order and unnatural phrasing. Ignore punctuation, capitalization and accent.
 - Also check the register: if it is correct English but would sound too blunt, too stiff, too casual or textbook-like for the learner's style and situation, treat that as a mistake and explain it in Japanese.
-- If there are mistakes: has_mistake=true, "corrected" = the full sentence with minimal edits, "points" = one item per fix (wrong part, right part, one short sentence in Japanese explaining why).
-- If there are no mistakes: has_mistake=false, "corrected" = transcript, "points" = [], and if a native speaker would say it more naturally, give that in "natural_version" (otherwise empty string).
+- "corrected" is always the full sentence written properly, with correct punctuation, capitalization and spacing.
+- If there are mistakes: has_mistake=true, "corrected" = the full sentence with minimal edits, "points" = one item per fix (wrong part, right part, one short sentence in Japanese explaining why). Never make a point for punctuation, capitalization or spacing alone.
+- If there are no mistakes: has_mistake=false, "corrected" = transcript (properly punctuated), "points" = [], and if a native speaker would say it more naturally, give that in "natural_version" (otherwise empty string).
+- "variants": exactly 2 short other ways to say what the learner meant, in different registers, so they can feel the nuance. Usually one more casual ("label_ja": "カジュアル") and one more polite ("label_ja": "丁寧"); if one of those is the same as "corrected", use another angle instead (e.g. "もっと自然", "仕事向け"). "note_ja": one short Japanese phrase on the nuance. Keep them at the learner's level and natural spoken English.
 - If the learner used Japanese, put a natural English version in "corrected", has_mistake=true, and explain in "points".
 - "used_target_phrase": true if the learner used the target phrase (or a correct variation of it).`;
 }
@@ -1045,9 +1108,11 @@ const S=(t,extra)=>Object.assign({type:t},extra||{});
 const TURN_SCHEMA=S('OBJECT',{properties:{
   transcript:S('STRING'),has_mistake:S('BOOLEAN'),corrected:S('STRING'),
   points:S('ARRAY',{items:S('OBJECT',{properties:{wrong:S('STRING'),right:S('STRING'),why_ja:S('STRING')},required:['wrong','right','why_ja']})}),
-  natural_version:S('STRING'),used_target_phrase:S('BOOLEAN'),reply:S('STRING'),reply_ja:S('STRING')},
-  required:['transcript','has_mistake','corrected','points','natural_version','used_target_phrase','reply','reply_ja'],
-  propertyOrdering:['transcript','reply','reply_ja','has_mistake','corrected','points','natural_version','used_target_phrase']});
+  natural_version:S('STRING'),
+  variants:S('ARRAY',{items:S('OBJECT',{properties:{label_ja:S('STRING'),en:S('STRING'),note_ja:S('STRING')},required:['label_ja','en','note_ja']})}),
+  used_target_phrase:S('BOOLEAN'),reply:S('STRING'),reply_ja:S('STRING')},
+  required:['transcript','has_mistake','corrected','points','natural_version','variants','used_target_phrase','reply','reply_ja'],
+  propertyOrdering:['transcript','reply','reply_ja','has_mistake','corrected','points','natural_version','variants','used_target_phrase']});
 const OPEN_SCHEMA=S('OBJECT',{properties:{reply:S('STRING'),reply_ja:S('STRING')},required:['reply','reply_ja'],propertyOrdering:['reply','reply_ja']});
 const HINT_SCHEMA=S('OBJECT',{properties:{hints:S('ARRAY',{items:S('OBJECT',{properties:{en:S('STRING'),ja:S('STRING')},required:['en','ja']})})},required:['hints']});
 
@@ -1159,29 +1224,41 @@ function addMe(text){
   const m=el('div','msg me');m.appendChild(el('span','who','You'));m.appendChild(el('div','txt',text));
   $('#log').appendChild(m);scrollDown();return m;
 }
+// Same words once punctuation, capitalization and spacing are ignored.
+const sameWords=(a,b)=>{const n=s=>String(s||'').toLowerCase().replace(/[^\p{L}\p{N}']+/gu,'');return n(a)===n(b)};
 function addCorrection(r,said,before){
-  const pts=Array.isArray(r.points)?r.points:[];
-  const good=!r.has_mistake||!pts.length;
+  // Punctuation / capitalization / spacing-only fixes are not mistakes: show the tidy sentence, no strikethrough.
+  const pts=(Array.isArray(r.points)?r.points:[]).filter(p=>!sameWords(p.wrong,p.right));
+  const good=!r.has_mistake||!pts.length||sameWords(r.corrected,said);
+  const fixed=(r.corrected||'').trim()||said;
   const c=el('div','note-card'+(good?' good':''));
-  if(good){
-    c.appendChild(el('div','head','Perfect — no corrections ✓'));
-    if(r.natural_version&&r.natural_version.trim()&&r.natural_version.trim()!==said.trim()){
-      c.appendChild(el('div','pt ja','もっと自然に言うなら:'));
-      const f=el('div','fixed',r.natural_version);c.appendChild(f);
-      const b=el('button','chip','▶ 聞く');b.onclick=()=>speak(r.natural_version);c.append(b,' ',askChip(r.natural_version));
-    }else c.appendChild(askChip(said));
-  }else{
-    c.appendChild(el('div','head','A little margin note'));
-    c.appendChild(el('div','fixed',r.corrected));
-    pts.forEach(p=>{const d=el('div','pt');const w=el('span','w',p.wrong);const ar=document.createTextNode(' → ');const rr=el('span','r',p.right);
-      d.append(w,ar,rr);d.appendChild(el('span','why',p.why_ja));c.appendChild(d);});
-    const b=el('button','chip','▶ 正しい文を聞く');b.onclick=()=>speak(r.corrected);c.append(b,' ',askChip(r.corrected));
+  c.appendChild(el('div','head','A little margin note'));
+  if(good)c.appendChild(el('div','okmark ja','✓ 間違いなし'));
+  c.appendChild(el('div','fixed',fixed));
+  if(!good)pts.forEach(p=>{const d=el('div','pt');const w=el('span','w',p.wrong);const ar=document.createTextNode(' → ');const rr=el('span','r',p.right);
+    d.append(w,ar,rr);d.appendChild(el('span','why',p.why_ja));c.appendChild(d);});
+  const b=el('button','chip',good?'▶ 聞く':'▶ 正しい文を聞く');b.onclick=()=>speak(fixed);c.append(b,' ',askChip(fixed));
+  const nat=(r.natural_version||'').trim();
+  const alts=[];
+  if(nat&&!sameWords(nat,fixed))alts.push({label_ja:'もっと自然',en:nat,note_ja:''});
+  for(const v of Array.isArray(r.variants)?r.variants:[])
+    if(v?.en&&!sameWords(v.en,fixed)&&!alts.some(a=>sameWords(a.en,v.en)))alts.push(v);
+  if(alts.length){
+    const box=el('div','alts');box.appendChild(el('div','alts-h ja','言い換え'));
+    alts.forEach(a=>{
+      const row=el('div','alt');
+      row.appendChild(el('span','alt-tag ja',a.label_ja||''));
+      const t=el('div','alt-body');t.appendChild(el('div','alt-en',a.en));if(a.note_ja)t.appendChild(el('div','alt-note ja',a.note_ja));
+      const p=el('button','chip','▶');p.title='聞く';p.onclick=()=>speak(a.en);
+      row.append(t,p);box.appendChild(row);
+    });
+    c.appendChild(box);
   }
   if(r.used_target_phrase&&!cur.aboutMe)c.appendChild(el('span','badge','★ Target phrase used!'));
   if(before)$('#log').insertBefore(c,before);else $('#log').appendChild(c);
   scrollDown();
-  if(!good||(r.natural_version&&r.natural_version.trim())){
-    notebook.unshift({at:new Date().toISOString(),phrase:cur.phrase,said,corrected:good?'':r.corrected,points:pts,natural:r.natural_version||''});
+  if(!good||(nat&&!sameWords(nat,fixed))){
+    notebook.unshift({at:new Date().toISOString(),phrase:cur.phrase,said,corrected:good?'':fixed,points:good?[]:pts,natural:nat});
     notebook=notebook.slice(0,500);store.set('notebook',notebook);
   }
 }
@@ -1795,6 +1872,191 @@ document.addEventListener('keydown',e=>{
 
 /* ---------- init ---------- */
 loadSettingsForm();renderStyleChip();renderShelf();renderAsk();renderQuickMenu();
+/* ---------- lines: movie / drama repeat practice ---------- */
+let scripts=store.get('lines',[]),lnCur=null,lnTidying=null;
+
+// Minimal .xlsx reader (zip + XML), so no library is needed.
+async function unzipEntries(buf,want){
+  const dv=new DataView(buf),u8=new Uint8Array(buf),out={};
+  let eocd=-1;
+  for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-66000);i--)if(dv.getUint32(i,true)===0x06054b50){eocd=i;break}
+  if(eocd<0)throw new Error('zip');
+  let p=dv.getUint32(eocd+16,true);const n=dv.getUint16(eocd+10,true);
+  for(let k=0;k<n;k++){
+    if(dv.getUint32(p,true)!==0x02014b50)break;
+    const method=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true);
+    const name=new TextDecoder().decode(u8.subarray(p+46,p+46+nl));
+    p+=46+nl+xl+cl;
+    if(!want(name))continue;
+    const start=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true),data=u8.slice(start,start+csize);
+    if(method===0)out[name]=new TextDecoder().decode(data);
+    else if(method===8)out[name]=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  }
+  return out;
+}
+async function readXlsx(file){
+  const files=await unzipEntries(await file.arrayBuffer(),n=>n==='xl/sharedStrings.xml'||/^xl\/worksheets\/sheet\d+\.xml$/.test(n));
+  const xml=s=>new DOMParser().parseFromString(s,'application/xml');
+  const tText=node=>[...node.getElementsByTagName('t')].filter(t=>!t.closest('rPh')).map(t=>t.textContent).join('');
+  const ss=files['xl/sharedStrings.xml']?[...xml(files['xl/sharedStrings.xml']).getElementsByTagName('si')].map(tText):[];
+  const sheet=Object.keys(files).filter(n=>n.includes('worksheets')).sort()[0];
+  if(!sheet)throw new Error('sheet');
+  const col=ref=>{let n=0;for(const ch of ref.replace(/\d+/g,''))n=n*26+ch.charCodeAt(0)-64;return n-1};
+  return [...xml(files[sheet]).getElementsByTagName('row')].map(r=>{
+    const row=[];
+    for(const c of r.getElementsByTagName('c')){
+      const t=c.getAttribute('t'),v=c.getElementsByTagName('v')[0]?.textContent;
+      row[col(c.getAttribute('r')||'A')]=t==='s'?(ss[+v]||''):t==='inlineStr'?tText(c):(v||'');
+    }
+    return [...row].map(x=>x||'');
+  });
+}
+function readDelimited(text){
+  const tab=text.includes('\t'),rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){if(ch==='"'&&text[i+1]==='"'){f+='"';i++}else if(ch==='"')q=false;else f+=ch;continue}
+    if(ch==='"'&&!f)q=true;
+    else if(ch===(tab?'\t':',')){row.push(f);f=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=''}
+    else f+=ch;
+  }
+  if(f||row.length){row.push(f);rows.push(row)}
+  return rows;
+}
+// ALL-CAPS captions → sentence case (the AI pass later restores names properly).
+function sentenceCase(s){
+  const letters=s.replace(/[^A-Za-z]/g,'');
+  if(!letters||letters.replace(/[^A-Z]/g,'').length/letters.length<0.8)return s;
+  return s.toLowerCase().replace(/(^|[.!?]\s+|(?:^|\s)["“])([a-z])/g,(m,a,b)=>a+b.toUpperCase())
+    .replace(/\bi\b/g,'I').replace(/\bi'(m|ll|d|ve)\b/g,"I'$1").replace(/\bok\b/g,'OK');
+}
+// Rows → practice lines: drop sound tags and songs, join lines that continue a sentence, tidy duplicated Japanese.
+function rowsToLines(rows){
+  if(!rows.length)return [];
+  const head=rows[0].map(h=>String(h).toLowerCase().trim());
+  let ti=head.indexOf('time'),ei=head.findIndex(h=>/subtitle|english|^en$/.test(h)),ji=head.findIndex(h=>/human translation|japanese|日本語|^ja$/.test(h));
+  if(ji<0)ji=head.findIndex(h=>/translation/.test(h));
+  const hasHead=ei>=0;
+  if(!hasHead){ti=-1;ei=0;ji=1}
+  if(ji<0)ji=ei+1;
+  const raw=[];
+  for(const r of rows.slice(hasHead?1:0)){
+    let en=String(r[ei]||'');
+    if(/♪/.test(en))continue;
+    en=en.replace(/\([^)]*\)|\[[^\]]*\]/g,' ').replace(/^\s*-\s*/,'').replace(/\s+/g,' ').trim();
+    if(!/[A-Za-z]/.test(en))continue;
+    raw.push({t:ti>=0?String(r[ti]||''):'',en:sentenceCase(en),ja:String(r[ji]||'').trim()});
+  }
+  const out=[];
+  for(const x of raw){
+    const last=out[out.length-1];
+    if(last&&!/[.!?…"”]$/.test(last.en)&&(last.en+' '+x.en).length<180){last.en+=' '+x.en;last.parts.push(x.ja)}
+    else out.push({t:x.t,en:x.en,parts:[x.ja]});
+  }
+  return out.map(l=>{
+    const segs=[];
+    for(const p of l.parts)for(const s of p.split(/\n/))if(s.trim()&&!segs.includes(s.trim()))segs.push(s.trim());
+    return {t:l.t,en:l.en,ja:segs.join(' ')};
+  });
+}
+$('#lnImport').onclick=()=>$('#lnFile').click();
+$('#lnFile').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  let rows;
+  try{rows=/\.xlsx$/i.test(f.name)?await readXlsx(f):readDelimited(await f.text())}
+  catch(err){console.error(err);toast('ファイルを読み取れませんでした',5000);return}
+  const lines=rowsToLines(rows);
+  if(!lines.length){toast('セリフが見つかりませんでした',5000);return}
+  const title=f.name.replace(/\.[^.]+$/,'').replace(/^Language Reactor\s*-\s*/i,'').trim()||'Lines';
+  const s={id:Date.now().toString(36),title,lines,tidied:false,at:new Date().toISOString()};
+  scripts.unshift(s);saveScripts();renderLnList();openScript(s.id);
+  toast(`${lines.length} 本のセリフを読み込みました`);
+};
+function saveScripts(){store.set('lines',scripts)}
+function renderLnList(){
+  const box=$('#lnList');box.innerHTML='';
+  if(!scripts.length){box.appendChild(el('div','muted ja','まだセリフはありません。'));return}
+  for(const s of scripts){
+    const it=el('div','ln-item');
+    const name=el('div','ln-name',s.title);name.onclick=()=>openScript(s.id);
+    const meta=el('div');meta.append(name,el('div','ln-count ja',`${s.lines.length} lines`));meta.style.flex='1';meta.style.minWidth='0';
+    const del=el('button','chip','削除');
+    del.onclick=()=>{if(confirm(`「${s.title}」を削除しますか？`)){scripts=scripts.filter(x=>x.id!==s.id);saveScripts();renderLnList()}};
+    it.append(meta,del);box.appendChild(it);
+  }
+}
+const CAT_SVG=(fur,ear)=>`<svg class="ln-cat" viewBox="0 0 64 64" aria-hidden="true">
+<path d="M14 26 L12 6 L28 18 Z" fill="${fur}"/><path d="M50 26 L52 6 L36 18 Z" fill="${fur}"/>
+<path d="M16 22 L15 11 L24 18 Z" fill="${ear}"/><path d="M48 22 L49 11 L40 18 Z" fill="${ear}"/>
+<ellipse cx="32" cy="36" rx="22" ry="20" fill="${fur}"/>
+<ellipse cx="24" cy="34" rx="2.6" ry="3.4" fill="#2a2140"/><ellipse cx="40" cy="34" rx="2.6" ry="3.4" fill="#2a2140"/>
+<circle cx="25" cy="33" r=".9" fill="#fff"/><circle cx="41" cy="33" r=".9" fill="#fff"/>
+<path d="M30 40 L34 40 L32 42.5 Z" fill="#e8457f"/><path d="M32 42.5 Q29 46 26 44 M32 42.5 Q35 46 38 44" stroke="#2a2140" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+<path d="M10 38 L20 40 M10 44 L20 42 M54 38 L44 40 M54 44 L44 42" stroke="#2a2140" stroke-width="1" stroke-linecap="round" opacity=".55"/>
+<ellipse cx="19" cy="42" rx="3.5" ry="2" fill="#ffb3c9" opacity=".7"/><ellipse cx="45" cy="42" rx="3.5" ry="2" fill="#ffb3c9" opacity=".7"/></svg>`;
+const CATS=[CAT_SVG('#f4a259','#ffd3b0'),CAT_SVG('#9aa3b5','#e6e9f0')];
+function speakSlow(text,bubble){const s=settings.slow;settings.slow=true;try{speak(text,bubble)}finally{settings.slow=s}}
+function openScript(id){
+  lnCur=scripts.find(s=>s.id===id);if(!lnCur)return;
+  $('#ln-menu').style.display='none';$('#ln-play').style.display='block';
+  $('#lnTitle').textContent=lnCur.title;
+  renderLines();scrollTo({top:0});
+  if(!lnCur.tidied)tidyScript(lnCur);
+}
+function renderLines(){
+  const box=$('#lnLines');box.innerHTML='';
+  box.classList.toggle('ln-hide-en',$('#lnHideEn').checked);box.classList.toggle('ln-hide-ja',$('#lnHideJa').checked);
+  lnCur.lines.forEach((l,i)=>{
+    const row=el('div','ln-line'+(i%2?' r':''));
+    const cat=document.createElement('div');cat.innerHTML=CATS[i%2];
+    const b=el('div','ln-bubble');
+    const en=el('div','ln-en',l.en),ja=el('div','ln-ja',l.ja||'');
+    en.onclick=ja.onclick=e=>e.currentTarget.classList.toggle('show');
+    const btns=el('div','ln-btns');
+    const play=el('button','chip','▶');play.title='聞く';play.onclick=()=>speak(l.en,b);
+    const slow=el('button','chip','🐢 ゆっくり');slow.onclick=()=>speakSlow(l.en,b);
+    btns.append(play,slow,askChip(l.en));
+    if(l.t)btns.appendChild(el('span','ln-time',l.t));
+    b.append(en);if(l.ja)b.append(ja);b.append(btns);
+    row.append(cat.firstChild,b);box.appendChild(row);
+  });
+}
+$('#lnHideEn').onchange=$('#lnHideJa').onchange=()=>{if(lnCur)renderLines()};
+$('#lnBack').onclick=()=>{$('#ln-play').style.display='none';$('#ln-menu').style.display='block';renderLnList();scrollTo({top:0})};
+// One background AI pass per script: restore capitalization (names etc.) and tidy misaligned Japanese.
+const TIDY_SCHEMA=S('OBJECT',{properties:{lines:S('ARRAY',{items:S('OBJECT',{properties:{i:S('INTEGER'),en:S('STRING'),ja:S('STRING')},required:['i','en','ja']})})},required:['lines']});
+async function tidyScript(s){
+  if(lnTidying===s.id)return;lnTidying=s.id;
+  const status=t=>{if(lnCur===s)$('#lnStatus').textContent=t};
+  const size=60,chunks=[];
+  for(let i=0;i<s.lines.length;i+=size)chunks.push(s.lines.slice(i,i+size).map((l,k)=>({i:i+k,en:l.en,ja:l.ja})));
+  let done=0,failed=0;
+  status('AI が大文字・小文字と訳を整えています…');
+  const work=async c=>{
+    try{
+      const j=await gemini(settings.chatModel,{contents:[{role:'user',parts:[{text:`These are subtitle lines from a TV show or movie, for a Japanese learner who will repeat them out loud.
+For each line return:
+- "en": the same English words with natural capitalization and punctuation (names, places, "I", sentence starts). Do not change, add or remove words.
+- "ja": a natural Japanese subtitle for that English line. The given Japanese may be missing, cut off, or contain parts of neighboring lines: keep what matches this line and fix or write the rest.
+Keep "i" the same. Return every line.
+
+${JSON.stringify(c)}`}]}],generationConfig:{responseMimeType:'application/json',responseSchema:TIDY_SCHEMA,temperature:0.2}},{tries:2});
+      for(const x of parseJSON(textOf(j)).lines||[]){
+        const l=s.lines[x.i];
+        if(l&&x.en&&sameWords(x.en,l.en)){l.en=x.en;l.ja=x.ja||l.ja}
+      }
+    }catch(e){console.warn('tidy failed',e);failed++}
+    done++;status(`AI が整えています… ${done}/${chunks.length}`);
+  };
+  const queue=[...chunks];
+  await Promise.all([0,1,2].map(async()=>{while(queue.length)await work(queue.shift())}));
+  lnTidying=null;
+  if(failed<chunks.length){s.tidied=!failed;saveScripts()}
+  status(failed?'一部を整えられませんでした（次に開いたときにもう一度試します）':'');
+  if(lnCur===s)renderLines();
+}
+
 if(!settings.apiKey&&!settings.claudeKey)setTimeout(()=>toast('まず Settings で Gemini API key を入力してください',5000),600);
 if(location.protocol==='file:')setTimeout(()=>toast('マイクを使うには start.command から開いてください（localhost）',6000),2500);
 </script>
