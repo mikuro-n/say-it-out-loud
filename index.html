@@ -153,12 +153,10 @@ label{display:block;font-family:var(--block);font-size:11px;letter-spacing:.08em
   text-transform:none;letter-spacing:0;margin:0;font-weight:500}
 .ln-tog input{width:auto;margin:0}
 .ln-status{opacity:.85;font-size:12px}
-.ln-line{display:flex;align-items:flex-end;gap:8px;margin:0 0 16px}
-.ln-line.r{flex-direction:row-reverse}
-.ln-cat{flex:none;width:58px;height:58px}
-.ln-bubble{position:relative;flex:1;min-width:0;max-width:560px;background:#fffdf6;border-radius:18px;padding:10px 14px 8px;box-shadow:0 6px 16px rgba(20,10,40,.22)}
-.ln-bubble::after{content:"";position:absolute;bottom:14px;left:-8px;border:8px solid transparent;border-right-color:#fffdf6;border-left:0}
-.ln-line.r .ln-bubble::after{left:auto;right:-8px;border-right:0;border-left:8px solid #fffdf6}
+.ln-line{display:flex;margin:0 28px 14px 0}
+.ln-line.r{justify-content:flex-end;margin:0 0 14px 28px}
+.ln-bubble{position:relative;flex:1;min-width:0;max-width:600px;background:#fffdf6;border-radius:18px 18px 18px 6px;padding:10px 14px 8px;box-shadow:0 6px 16px rgba(20,10,40,.22)}
+.ln-line.r .ln-bubble{border-radius:18px 18px 6px 18px}
 .ln-bubble.speaking{box-shadow:0 0 0 3px var(--gold),0 6px 16px rgba(20,10,40,.22)}
 .ln-en{font-family:var(--serif);font-size:18px;color:var(--navy);line-height:1.35}
 .ln-ja{font-family:var(--ja);font-size:13px;color:var(--ink-soft);margin-top:3px}
@@ -1986,16 +1984,6 @@ function renderLnList(){
     it.append(meta,del);box.appendChild(it);
   }
 }
-const CAT_SVG=(fur,ear)=>`<svg class="ln-cat" viewBox="0 0 64 64" aria-hidden="true">
-<path d="M14 26 L12 6 L28 18 Z" fill="${fur}"/><path d="M50 26 L52 6 L36 18 Z" fill="${fur}"/>
-<path d="M16 22 L15 11 L24 18 Z" fill="${ear}"/><path d="M48 22 L49 11 L40 18 Z" fill="${ear}"/>
-<ellipse cx="32" cy="36" rx="22" ry="20" fill="${fur}"/>
-<ellipse cx="24" cy="34" rx="2.6" ry="3.4" fill="#2a2140"/><ellipse cx="40" cy="34" rx="2.6" ry="3.4" fill="#2a2140"/>
-<circle cx="25" cy="33" r=".9" fill="#fff"/><circle cx="41" cy="33" r=".9" fill="#fff"/>
-<path d="M30 40 L34 40 L32 42.5 Z" fill="#e8457f"/><path d="M32 42.5 Q29 46 26 44 M32 42.5 Q35 46 38 44" stroke="#2a2140" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-<path d="M10 38 L20 40 M10 44 L20 42 M54 38 L44 40 M54 44 L44 42" stroke="#2a2140" stroke-width="1" stroke-linecap="round" opacity=".55"/>
-<ellipse cx="19" cy="42" rx="3.5" ry="2" fill="#ffb3c9" opacity=".7"/><ellipse cx="45" cy="42" rx="3.5" ry="2" fill="#ffb3c9" opacity=".7"/></svg>`;
-const CATS=[CAT_SVG('#f4a259','#ffd3b0'),CAT_SVG('#9aa3b5','#e6e9f0')];
 function speakSlow(text,bubble){const s=settings.slow;settings.slow=true;try{speak(text,bubble)}finally{settings.slow=s}}
 function openScript(id){
   lnCur=scripts.find(s=>s.id===id);if(!lnCur)return;
@@ -2009,7 +1997,6 @@ function renderLines(){
   box.classList.toggle('ln-hide-en',$('#lnHideEn').checked);box.classList.toggle('ln-hide-ja',$('#lnHideJa').checked);
   lnCur.lines.forEach((l,i)=>{
     const row=el('div','ln-line'+(i%2?' r':''));
-    const cat=document.createElement('div');cat.innerHTML=CATS[i%2];
     const b=el('div','ln-bubble');
     const en=el('div','ln-en',l.en),ja=el('div','ln-ja',l.ja||'');
     en.onclick=ja.onclick=e=>e.currentTarget.classList.toggle('show');
@@ -2019,7 +2006,7 @@ function renderLines(){
     btns.append(play,slow,askChip(l.en));
     if(l.t)btns.appendChild(el('span','ln-time',l.t));
     b.append(en);if(l.ja)b.append(ja);b.append(btns);
-    row.append(cat.firstChild,b);box.appendChild(row);
+    row.append(b);box.appendChild(row);
   });
 }
 $('#lnHideEn').onchange=$('#lnHideJa').onchange=()=>{if(lnCur)renderLines()};
